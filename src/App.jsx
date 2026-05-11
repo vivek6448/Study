@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import CodingSection from "./CodingSection";
 
 const CATEGORIES = [
 {
@@ -1129,8 +1130,8 @@ function Button({ label, ...rest }) {
       },
       {
         q: "Tagged template literals?",
-        a_en: "tag\`text \${expr}\` calls tag(strings, ...values). Tag function processes or sanitizes. Used by styled-components, gql, sql (injection prevention), i18n.",
-        a_hi: "tag\`text \${expr}\` tag(strings, ...values) ko call karta hai. Tag function output process karta hai. styled-components, gql, sql injection prevention, i18n mein use hota hai.",
+        a_en: "tag`text ${expr}` calls tag(strings, ...values). Tag function processes or sanitizes. Used by styled-components, gql, sql (injection prevention), i18n.",
+        a_hi: "tag`text ${expr}` tag(strings, ...values) ko call karta hai. Tag function output process karta hai. styled-components, gql, sql injection prevention, i18n mein use hota hai.",
         code: `function highlight(strings, ...values) {
   return strings.reduce((result, str, i) => {
     const v = values[i] ? "<b>" + values[i] + "</b>" : '';
@@ -5641,6 +5642,7 @@ export default function App() {
   const [search, setSearch] = useState("");
   const [reviewed, setReviewed] = useState({});
   const [lang, setLang] = useState("both");
+  const [mode, setMode] = useState("theory");
 
   const cat = CATEGORIES.find(c => c.id === activeCat);
   const accent = cat.color;
@@ -5721,23 +5723,43 @@ export default function App() {
             ))}
           </div>
 
-          <div style={{ marginTop: 12, position: "relative", maxWidth: 480 }}>
-            <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#333", fontSize: 13 }}>🔍</span>
-            <input
-              value={search}
-              onChange={e => { setSearch(e.target.value); setOpenIdx(null); }}
-              placeholder={`Search "${cat.label}"...`}
-              style={{
-                width: "100%", boxSizing: "border-box",
-                background: "#0c0c1a", border: "1px solid #1a1a2e",
-                borderRadius: 8, padding: "9px 12px 9px 34px",
-                color: "#ccc", fontFamily: "monospace", fontSize: 12, outline: "none",
-              }}
-            />
+          <div style={{ marginTop: 14, display: "flex", gap: 4, background: "#0c0c1a", border: "1px solid #1a1a2e", borderRadius: 8, padding: 3, width: "fit-content" }}>
+            {[
+              { id: "theory", label: "📚 Theory" },
+              { id: "coding", label: "💻 Coding" },
+            ].map(opt => (
+              <button key={opt.id} onClick={() => setMode(opt.id)} style={{
+                background: mode === opt.id ? accent + "22" : "transparent",
+                border: "none", borderRadius: 6, padding: "6px 14px",
+                color: mode === opt.id ? accent : "#555",
+                fontFamily: "monospace", fontSize: 10, letterSpacing: 1.5,
+                cursor: "pointer", transition: "all 0.2s",
+              }}>
+                {opt.label}
+              </button>
+            ))}
           </div>
+
+          {mode === "theory" && (
+            <div style={{ marginTop: 12, position: "relative", maxWidth: 480 }}>
+              <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#333", fontSize: 13 }}>🔍</span>
+              <input
+                value={search}
+                onChange={e => { setSearch(e.target.value); setOpenIdx(null); }}
+                placeholder={`Search "${cat.label}"...`}
+                style={{
+                  width: "100%", boxSizing: "border-box",
+                  background: "#0c0c1a", border: "1px solid #1a1a2e",
+                  borderRadius: 8, padding: "9px 12px 9px 34px",
+                  color: "#ccc", fontFamily: "monospace", fontSize: 12, outline: "none",
+                }}
+              />
+            </div>
+          )}
         </div>
       </div>
 
+      {mode === "theory" ? <>
       <div style={{ background: "#07070f", position: "sticky", top: 0, zIndex: 20, borderBottom: "1px solid #111120", padding: "0 24px" }}>
         <div style={{ maxWidth: 980, margin: "0 auto" }}>
           <TabRow cats={JS_CATS} label="JS" labelColor="#F7DF1E" activeCat={activeCat} reviewed={reviewed} switchCat={switchCat} />
@@ -5924,6 +5946,7 @@ export default function App() {
           </p>
         </div>
       </div>
+      </> : <CodingSection />}
     </div>
   );
 }
