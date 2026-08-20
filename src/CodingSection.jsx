@@ -704,16 +704,548 @@ app.get('/api/shop/users/:id/orders', (req, res) => {
   // Output: User 42 - Status: shipped, Limit: 10
 });`,
   },
+  {
+    id: 28,
+    category: "Logic",
+    title: "Implement debounce() from scratch",
+    description: "Given a function and a delay, return a debounced version that only runs once the calls have stopped coming in for that long.",
+    example: `log(); log(); log(); // only ONE call actually fires, after the delay`,
+    type: "dual",
+    code1: `function debounce(fn, delay) {
+  let timer;
+  return function (...args) {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn.apply(this, args), delay);
+  };
+}
+
+let calls = 0;
+const log = debounce(() => { calls++; console.log("Debounced call #" + calls); }, 50);
+log(); log(); log(); // rapid calls — only the last one survives
+setTimeout(() => console.log("Total calls after 100ms:", calls), 100);`,
+    code2: `function debounce(fn, delay) {
+  var timer = null;
+  return function () {
+    var args = arguments;
+    var context = this;
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(function () {
+      fn.apply(context, args);
+    }, delay);
+  };
+}
+
+var calls = 0;
+var log = debounce(function () { calls++; console.log("Debounced call #" + calls); }, 50);
+log(); log(); log();
+setTimeout(function () { console.log("Total calls after 100ms:", calls); }, 100);`,
+  },
+  {
+    id: 29,
+    category: "Logic",
+    title: "Implement throttle() from scratch",
+    description: "Given a function and a limit, return a throttled version that runs at most once per limit window, firing immediately on the first call.",
+    example: `log(); log(); log(); // only the FIRST call fires immediately`,
+    type: "dual",
+    code1: `function throttle(fn, limit) {
+  let waiting = false;
+  return function (...args) {
+    if (waiting) return;
+    fn.apply(this, args);
+    waiting = true;
+    setTimeout(() => { waiting = false; }, limit);
+  };
+}
+
+let count = 0;
+const log = throttle(() => { count++; console.log("Throttled call #" + count); }, 50);
+log(); log(); log();
+console.log("Immediate count:", count);`,
+    code2: `function throttle(fn, limit) {
+  var lastRun = 0;
+  return function () {
+    var now = Date.now();
+    if (now - lastRun >= limit) {
+      lastRun = now;
+      fn.apply(this, arguments);
+    }
+  };
+}
+
+var count = 0;
+var log = throttle(function () { count++; console.log("Throttled call #" + count); }, 50);
+log(); log(); log();
+console.log("Immediate count:", count);`,
+  },
+  {
+    id: 30,
+    category: "Array",
+    title: "Flatten a deeply nested array",
+    description: "Given an array nested to an arbitrary depth, return a single flat array of all its values.",
+    example: `Input:  [1, [2, [3, [4, 5]], 6]]
+Output: [1, 2, 3, 4, 5, 6]`,
+    type: "dual",
+    code1: `function flattenArray(arr) {
+  return arr.flat(Infinity);
+}
+
+console.log(JSON.stringify(flattenArray([1, [2, [3, [4, 5]], 6]])));
+console.log(JSON.stringify(flattenArray([1, [2, 3], 4])));`,
+    code2: `function flattenArray(arr) {
+  var result = [];
+  for (var i = 0; i < arr.length; i++) {
+    if (Array.isArray(arr[i])) {
+      var nested = flattenArray(arr[i]);
+      for (var j = 0; j < nested.length; j++) result.push(nested[j]);
+    } else {
+      result.push(arr[i]);
+    }
+  }
+  return result;
+}
+
+console.log(JSON.stringify(flattenArray([1, [2, [3, [4, 5]], 6]])));
+console.log(JSON.stringify(flattenArray([1, [2, 3], 4])));`,
+  },
+  {
+    id: 31,
+    category: "Logic",
+    title: "Write a polyfill for Array.prototype.map",
+    description: "Implement your own version of .map() without using the built-in, and verify it behaves the same way.",
+    example: `[1,2,3].myMap(n => n * 2)  =>  [2, 4, 6]`,
+    type: "dual",
+    code1: `Array.prototype.myMap = function (callback) {
+  const result = [];
+  for (let i = 0; i < this.length; i++) {
+    result.push(callback(this[i], i, this));
+  }
+  return result;
+};
+
+console.log(JSON.stringify([1, 2, 3].myMap(n => n * 2)));
+console.log(JSON.stringify(["a", "b"].myMap((c, i) => i + ":" + c)));`,
+    code2: `Array.prototype.myMap2 = function (callback, thisArg) {
+  var result = [];
+  var i = 0;
+  while (i < this.length) {
+    if (Object.prototype.hasOwnProperty.call(this, i)) {
+      result[i] = callback.call(thisArg, this[i], i, this);
+    }
+    i++;
+  }
+  return result;
+};
+
+console.log(JSON.stringify([1, 2, 3].myMap2(function (n) { return n * 2; })));`,
+  },
+  {
+    id: 32,
+    category: "Logic",
+    title: "Deep clone an object",
+    description: "Given a nested object, produce an independent copy where mutating the clone never affects the original.",
+    example: `original.nested.city = "Mumbai"
+clone.nested.city changed to "Delhi" — original stays "Mumbai"`,
+    type: "dual",
+    code1: `const original = { name: "Raj", nested: { city: "Mumbai" }, list: [1, 2, 3] };
+const clone = structuredClone(original);
+clone.nested.city = "Delhi";
+
+console.log("Original:", JSON.stringify(original));
+console.log("Clone:   ", JSON.stringify(clone));`,
+    code2: `function deepClone(obj) {
+  if (obj === null || typeof obj !== "object") return obj;
+  if (Array.isArray(obj)) {
+    var arr = [];
+    for (var i = 0; i < obj.length; i++) arr[i] = deepClone(obj[i]);
+    return arr;
+  }
+  var copy = {};
+  for (var key in obj) {
+    if (Object.prototype.hasOwnProperty.call(obj, key)) copy[key] = deepClone(obj[key]);
+  }
+  return copy;
+}
+
+var original = { name: "Raj", nested: { city: "Mumbai" } };
+var clone = deepClone(original);
+clone.nested.city = "Delhi";
+console.log("Original:", JSON.stringify(original));
+console.log("Clone:   ", JSON.stringify(clone));`,
+  },
+  {
+    id: 33,
+    category: "Logic",
+    title: "Deep-compare two objects for equality",
+    description: "Given two objects, return true only if every nested key and value matches, regardless of reference identity.",
+    example: `deepEqual({a:1,b:{c:2}}, {a:1,b:{c:2}})  =>  true
+deepEqual({a:1}, {a:2})  =>  false`,
+    type: "dual",
+    code1: `function deepEqual(a, b) {
+  if (a === b) return true;
+  if (typeof a !== "object" || typeof b !== "object" || a === null || b === null) return false;
+  const keysA = Object.keys(a), keysB = Object.keys(b);
+  if (keysA.length !== keysB.length) return false;
+  return keysA.every(key => deepEqual(a[key], b[key]));
+}
+
+console.log(deepEqual({ a: 1, b: { c: 2 } }, { a: 1, b: { c: 2 } })); // true
+console.log(deepEqual({ a: 1 }, { a: 2 })); // false`,
+    code2: `function deepEqual(a, b) {
+  if (a === b) return true;
+  if (typeof a !== "object" || typeof b !== "object" || a === null || b === null) return false;
+  var keysA = [], keysB = [];
+  for (var k1 in a) keysA.push(k1);
+  for (var k2 in b) keysB.push(k2);
+  if (keysA.length !== keysB.length) return false;
+  for (var i = 0; i < keysA.length; i++) {
+    var key = keysA[i];
+    if (!deepEqual(a[key], b[key])) return false;
+  }
+  return true;
+}
+
+console.log(deepEqual({ a: 1, b: { c: 2 } }, { a: 1, b: { c: 2 } }));
+console.log(deepEqual({ a: 1 }, { a: 2 }));`,
+  },
+  {
+    id: 34,
+    category: "String",
+    title: "Find the first non-repeating character in a string",
+    description: "Given a string, return the first character that appears exactly once, or null if none exists.",
+    example: `Input:  "swiss"
+Output: "w"`,
+    type: "dual",
+    code1: `function firstNonRepeating(str) {
+  const counts = {};
+  for (const ch of str) counts[ch] = (counts[ch] || 0) + 1;
+  for (const ch of str) if (counts[ch] === 1) return ch;
+  return null;
+}
+
+console.log("swiss  =>", firstNonRepeating("swiss"));
+console.log("aabbcc =>", firstNonRepeating("aabbcc"));`,
+    code2: `function firstNonRepeating(str) {
+  for (var i = 0; i < str.length; i++) {
+    var found = false;
+    for (var j = 0; j < str.length; j++) {
+      if (i !== j && str[i] === str[j]) { found = true; break; }
+    }
+    if (!found) return str[i];
+  }
+  return null;
+}
+
+console.log("swiss  =>", firstNonRepeating("swiss"));
+console.log("aabbcc =>", firstNonRepeating("aabbcc"));`,
+  },
+  {
+    id: 35,
+    category: "Logic",
+    title: "Implement memoization",
+    description: "Given an expensive pure function, return a memoized version that caches results per unique argument list.",
+    example: `fastSquare(5)  // computed
+fastSquare(5)  // "cache hit" — returned instantly`,
+    type: "dual",
+    code1: `function memoize(fn) {
+  const cache = new Map();
+  return function (...args) {
+    const key = JSON.stringify(args);
+    if (cache.has(key)) { console.log("cache hit for", key); return cache.get(key); }
+    const result = fn(...args);
+    cache.set(key, result);
+    return result;
+  };
+}
+
+function slowSquare(n) { for (let i = 0; i < 1e6; i++); return n * n; }
+const fastSquare = memoize(slowSquare);
+console.log(fastSquare(5));
+console.log(fastSquare(5)); // cache hit`,
+    code2: `function memoize(fn) {
+  var cache = {};
+  return function (n) {
+    if (Object.prototype.hasOwnProperty.call(cache, n)) {
+      console.log("cache hit for", n);
+      return cache[n];
+    }
+    var result = fn(n);
+    cache[n] = result;
+    return result;
+  };
+}
+
+function slowSquare(n) { for (var i = 0; i < 1e6; i++); return n * n; }
+var fastSquare = memoize(slowSquare);
+console.log(fastSquare(5));
+console.log(fastSquare(5));`,
+  },
+  {
+    id: 36,
+    category: "Logic",
+    title: "Implement currying",
+    description: "Given a function of arity N, transform it so it can be called one argument at a time, or several at once, returning the result once enough args are collected.",
+    example: `const c = curry(add3);
+c(1)(2)(3) === c(1,2)(3) === c(1,2,3) === 6`,
+    type: "dual",
+    code1: `function curry(fn) {
+  return function curried(...args) {
+    if (args.length >= fn.length) return fn(...args);
+    return (...more) => curried(...args, ...more);
+  };
+}
+
+function add3(a, b, c) { return a + b + c; }
+const curried = curry(add3);
+console.log(curried(1)(2)(3));
+console.log(curried(1, 2)(3));
+console.log(curried(1, 2, 3));`,
+    code2: `function curryAdd(a) {
+  return function (b) {
+    return function (c) {
+      return a + b + c;
+    };
+  };
+}
+
+console.log(curryAdd(1)(2)(3));
+console.log(curryAdd(10)(20)(30));`,
+  },
+  {
+    id: 37,
+    category: "Logic",
+    title: "Write a custom bind() polyfill",
+    description: "Implement your own version of Function.prototype.bind that permanently locks in 'this' and optionally some leading arguments.",
+    example: `const sayHi = greet.myBind(null, "Hi");
+sayHi("Raj")  =>  "Hi, Raj!"`,
+    type: "dual",
+    code1: `Function.prototype.myBind = function (context, ...boundArgs) {
+  const fn = this;
+  return function (...args) {
+    return fn.apply(context, [...boundArgs, ...args]);
+  };
+};
+
+function greet(greeting, name) { return greeting + ", " + name + "!"; }
+const sayHi = greet.myBind(null, "Hi");
+console.log(sayHi("Raj"));`,
+    code2: `Function.prototype.myBind2 = function (context) {
+  var fn = this;
+  var boundArgs = Array.prototype.slice.call(arguments, 1);
+  return function () {
+    var callArgs = Array.prototype.slice.call(arguments);
+    return fn.apply(context, boundArgs.concat(callArgs));
+  };
+};
+
+function greet(greeting, name) { return greeting + ", " + name + "!"; }
+var sayHi = greet.myBind2(null, "Hi");
+console.log(sayHi("Raj"));`,
+  },
+  {
+    id: 38,
+    category: "Logic",
+    title: "Implement Promise.all() from scratch",
+    description: "Given an array of promises (or plain values), return a single promise that resolves with all results in order, or rejects on the first failure.",
+    example: `myPromiseAll([p1, p2, 3])  =>  resolves with [v1, v2, 3]`,
+    type: "dual",
+    code1: `function myPromiseAll(promises) {
+  return new Promise((resolve, reject) => {
+    const results = [];
+    let completed = 0;
+    if (promises.length === 0) return resolve([]);
+    promises.forEach((p, i) => {
+      Promise.resolve(p).then(value => {
+        results[i] = value;
+        completed++;
+        if (completed === promises.length) resolve(results);
+      }).catch(reject);
+    });
+  });
+}
+
+myPromiseAll([Promise.resolve(1), Promise.resolve(2), 3])
+  .then(r => console.log("Resolved:", JSON.stringify(r)));`,
+    code2: `function myPromiseAll(promises) {
+  return new Promise(function (resolve, reject) {
+    var results = [];
+    var completed = 0;
+    if (promises.length === 0) { resolve([]); return; }
+    for (var i = 0; i < promises.length; i++) {
+      (function (index) {
+        Promise.resolve(promises[index]).then(function (value) {
+          results[index] = value;
+          completed++;
+          if (completed === promises.length) resolve(results);
+        }, reject);
+      })(i);
+    }
+  });
+}
+
+myPromiseAll([Promise.resolve(1), Promise.resolve(2), 3])
+  .then(function (r) { console.log("Resolved:", JSON.stringify(r)); });`,
+  },
+  {
+    id: 39,
+    category: "Logic",
+    title: "Build a simple event emitter (pub/sub)",
+    description: "Implement on/off/emit so multiple listeners can subscribe to a named event and be notified with arguments when it fires.",
+    example: `emitter.on("greet", name => console.log("Hello, " + name));
+emitter.emit("greet", "Raj");  // "Hello, Raj"`,
+    type: "dual",
+    code1: `class EventEmitter {
+  #events = {};
+  on(event, listener) {
+    (this.#events[event] ||= []).push(listener);
+    return () => this.off(event, listener);
+  }
+  off(event, listener) {
+    this.#events[event] = (this.#events[event] || []).filter(l => l !== listener);
+  }
+  emit(event, ...args) {
+    (this.#events[event] || []).forEach(l => l(...args));
+  }
+}
+
+const emitter = new EventEmitter();
+const unsubscribe = emitter.on("greet", name => console.log("Hello, " + name));
+emitter.emit("greet", "Raj");
+unsubscribe();
+emitter.emit("greet", "Aman"); // no output — unsubscribed`,
+    code2: `function EventEmitter() {
+  this.events = {};
+}
+EventEmitter.prototype.on = function (event, listener) {
+  if (!this.events[event]) this.events[event] = [];
+  this.events[event].push(listener);
+};
+EventEmitter.prototype.emit = function (event) {
+  var args = Array.prototype.slice.call(arguments, 1);
+  var listeners = this.events[event] || [];
+  for (var i = 0; i < listeners.length; i++) {
+    listeners[i].apply(null, args);
+  }
+};
+
+var emitter = new EventEmitter();
+emitter.on("greet", function (name) { console.log("Hello, " + name); });
+emitter.emit("greet", "Raj");`,
+  },
+  {
+    id: 40,
+    category: "String",
+    title: "Length of the longest substring without repeating characters",
+    description: "Given a string, return the length of its longest contiguous substring where every character is unique.",
+    example: `Input:  "abcabcbb"
+Output: 3  ("abc")`,
+    type: "dual",
+    code1: `function longestUniqueSubstring(str) {
+  let start = 0, maxLen = 0;
+  const seen = new Set();
+  for (let end = 0; end < str.length; end++) {
+    while (seen.has(str[end])) {
+      seen.delete(str[start]);
+      start++;
+    }
+    seen.add(str[end]);
+    maxLen = Math.max(maxLen, end - start + 1);
+  }
+  return maxLen;
+}
+
+console.log("abcabcbb =>", longestUniqueSubstring("abcabcbb"));
+console.log("bbbbb    =>", longestUniqueSubstring("bbbbb"));
+console.log("pwwkew   =>", longestUniqueSubstring("pwwkew"));`,
+    code2: `function hasUnique(str) {
+  var seen = {};
+  for (var i = 0; i < str.length; i++) {
+    if (seen[str[i]]) return false;
+    seen[str[i]] = true;
+  }
+  return true;
+}
+function longestUniqueSubstring(str) {
+  var maxLen = 0;
+  for (var i = 0; i < str.length; i++) {
+    for (var j = i; j <= str.length; j++) {
+      var sub = str.slice(i, j);
+      if (hasUnique(sub)) maxLen = Math.max(maxLen, sub.length);
+    }
+  }
+  return maxLen;
+}
+
+console.log("abcabcbb =>", longestUniqueSubstring("abcabcbb"));
+console.log("pwwkew   =>", longestUniqueSubstring("pwwkew"));`,
+  },
+  {
+    id: 41,
+    category: "String",
+    title: "Check whether two strings are anagrams",
+    description: "Given two strings, return true if one is a rearrangement of the other's letters (case/spacing/punctuation-insensitive).",
+    example: `isAnagram("listen", "silent")  =>  true
+isAnagram("hello", "world")    =>  false`,
+    type: "dual",
+    code1: `function isAnagram(a, b) {
+  const normalize = str => str.toLowerCase().replace(/[^a-z0-9]/g, "").split("").sort().join("");
+  return normalize(a) === normalize(b);
+}
+
+console.log("listen/silent =>", isAnagram("listen", "silent"));
+console.log("hello/world   =>", isAnagram("hello", "world"));`,
+    code2: `function isAnagram(a, b) {
+  a = a.toLowerCase().replace(/[^a-z0-9]/g, "");
+  b = b.toLowerCase().replace(/[^a-z0-9]/g, "");
+  if (a.length !== b.length) return false;
+  var counts = {};
+  for (var i = 0; i < a.length; i++) counts[a[i]] = (counts[a[i]] || 0) + 1;
+  for (var j = 0; j < b.length; j++) {
+    if (!counts[b[j]]) return false;
+    counts[b[j]]--;
+  }
+  return true;
+}
+
+console.log("listen/silent =>", isAnagram("listen", "silent"));
+console.log("hello/world   =>", isAnagram("hello", "world"));`,
+  },
+  {
+    id: 42,
+    category: "Array",
+    title: "Reverse a deeply nested array, preserving its structure",
+    description: "Given an array nested to an arbitrary depth, reverse the element order at every level WITHOUT flattening it.",
+    example: `Input:  [1, [2, 3], [4, [5, 6]]]
+Output: [[[6, 5], 4], [3, 2], 1]`,
+    type: "dual",
+    code1: `function reverseNested(arr) {
+  return arr.slice().reverse().map(item => Array.isArray(item) ? reverseNested(item) : item);
+}
+
+console.log(JSON.stringify(reverseNested([1, [2, 3], [4, [5, 6]]])));`,
+    code2: `function reverseNested(arr) {
+  var result = [];
+  for (var i = arr.length - 1; i >= 0; i--) {
+    if (Array.isArray(arr[i])) {
+      result.push(reverseNested(arr[i]));
+    } else {
+      result.push(arr[i]);
+    }
+  }
+  return result;
+}
+
+console.log(JSON.stringify(reverseNested([1, [2, 3], [4, [5, 6]]])));`,
+  },
 ];
 
 const CATEGORY_COLORS = {
-  String:       { bg: "#e1f5ee", color: "#0f6e56" },
-  Array:        { bg: "#e6f1fb", color: "#185fa5" },
-  Number:       { bg: "#faeeda", color: "#854f0b" },
-  "Type Check": { bg: "#eeedfe", color: "#3c3489" },
-  Logic:        { bg: "#fbeaf0", color: "#72243e" },
-  React:        { bg: "#e6f1fb", color: "#0c447c" },
-  Routing:      { bg: "#fce4d9", color: "#b8570a" },
+  String:       { bg: "rgba(94,234,212,0.12)",  color: "#5eead4" },
+  Array:        { bg: "rgba(125,211,252,0.12)", color: "#7dd3fc" },
+  Number:       { bg: "rgba(251,191,36,0.12)",  color: "#fbbf24" },
+  "Type Check": { bg: "rgba(196,181,253,0.12)", color: "#c4b5fd" },
+  Logic:        { bg: "rgba(249,168,212,0.12)", color: "#f9a8d4" },
+  React:        { bg: "rgba(97,218,251,0.12)",  color: "#61dafb" },
+  Routing:      { bg: "rgba(251,146,60,0.12)",  color: "#fb923c" },
 };
 
 function runCode(code) {
@@ -749,17 +1281,17 @@ function CodePanel({ label, tag, tagStyle, code, onCodeChange }) {
 
   return (
     <div style={{
-      background: "#fff", border: "1px solid #e5e2d8",
+      background: "#0c0c1a", border: "1px solid #1a1a2e",
       borderRadius: 12, overflow: "hidden",
       display: "flex", flexDirection: "column",
     }}>
       <div style={{
-        padding: "12px 16px", borderBottom: "1px solid #e5e2d8",
+        padding: "12px 16px", borderBottom: "1px solid #1a1a2e",
         display: "flex", justifyContent: "space-between", alignItems: "center",
-        background: "#fafaf7",
+        background: "#0e0e1a",
       }}>
-        <span style={{ fontSize: 13, fontWeight: 600, color: "#1a1a1a" }}>{label}</span>
-        <span style={{ fontSize: 11, fontWeight: 500, padding: "3px 8px", borderRadius: 4, ...tagStyle }}>{tag}</span>
+        <span style={{ fontSize: 14, fontWeight: 600, color: "#d8d4cc" }}>{label}</span>
+        <span style={{ fontSize: 12, fontWeight: 500, padding: "3px 8px", borderRadius: 4, ...tagStyle }}>{tag}</span>
       </div>
       <textarea
         value={code}
@@ -768,34 +1300,34 @@ function CodePanel({ label, tag, tagStyle, code, onCodeChange }) {
         style={{
           width: "100%", minHeight: 220, border: "none",
           padding: "14px 16px", boxSizing: "border-box",
-          fontFamily: '"SF Mono", Monaco, "Courier New", monospace',
-          fontSize: 12.5, lineHeight: 1.65, resize: "vertical",
-          background: "#fafaf7", color: "#1a1a1a", outline: "none",
+          fontFamily: "'Manrope', sans-serif",
+          fontSize: 13.5, lineHeight: 1.65, resize: "vertical", textAlign: "left",
+          background: "#0a0a14", color: "#c9d1d9", outline: "none",
         }}
       />
-      <div style={{ padding: "10px 16px", borderTop: "1px solid #e5e2d8", display: "flex", gap: 8, background: "#fff" }}>
+      <div style={{ padding: "10px 16px", borderTop: "1px solid #1a1a2e", display: "flex", gap: 8, background: "#0c0c1a" }}>
         <button onClick={handleRun} disabled={running} style={{
-          background: "#1a1a1a", color: "#fff", border: "none",
-          padding: "7px 14px", borderRadius: 6, fontSize: 12.5,
-          fontWeight: 500, cursor: "pointer", opacity: running ? 0.6 : 1,
+          background: "#4ade80", color: "#07070f", border: "none",
+          padding: "7px 14px", borderRadius: 6, fontSize: 13.5,
+          fontWeight: 600, cursor: "pointer", opacity: running ? 0.6 : 1,
         }}>
           {running ? "Running…" : "▶ Run"}
         </button>
         <button onClick={() => { setOutput(null); setIsError(false); }} style={{
-          background: "#fff", color: "#1a1a1a", border: "1px solid #d3d1c7",
-          padding: "7px 14px", borderRadius: 6, fontSize: 12.5, fontWeight: 500, cursor: "pointer",
+          background: "transparent", color: "#d8d4cc", border: "1px solid #1a1a2e",
+          padding: "7px 14px", borderRadius: 6, fontSize: 13.5, fontWeight: 500, cursor: "pointer",
         }}>
           Clear
         </button>
       </div>
       {output !== null && (
         <div style={{
-          background: "#1a1a1a", color: isError ? "#f09595" : "#c0dd97",
-          padding: "12px 16px", fontFamily: '"SF Mono", Monaco, monospace',
-          fontSize: 12, lineHeight: 1.6, whiteSpace: "pre-wrap",
-          wordBreak: "break-all", borderTop: "1px solid #333",
+          background: "#050510", color: isError ? "#f87171" : "#c0dd97",
+          padding: "12px 16px", fontFamily: "'Manrope', sans-serif",
+          fontSize: 13, lineHeight: 1.6, whiteSpace: "pre-wrap", textAlign: "left",
+          wordBreak: "break-all", borderTop: "1px solid #1a1a2e",
         }}>
-          <div style={{ fontSize: 10, color: "#666", textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>
+          <div style={{ fontSize: 11, color: "#666", textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>
             {isError ? "Error" : "Output"}
           </div>
           {output}
@@ -827,19 +1359,19 @@ function FormValidation() {
   };
 
   const inp = (extra) => ({
-    border: "1px solid #d3d1c7", borderRadius: 8, padding: "9px 12px",
-    fontSize: 14, width: "100%", outline: "none", fontFamily: "inherit",
-    background: "#fafaf7", color: "#1a1a1a", boxSizing: "border-box", ...extra,
+    border: "1px solid #1a1a2e", borderRadius: 8, padding: "9px 12px",
+    fontSize: 15, width: "100%", outline: "none", fontFamily: "inherit",
+    background: "#0a0a14", color: "#d8d4cc", boxSizing: "border-box", ...extra,
   });
 
   if (submitted) return (
     <div style={{ padding: 24, textAlign: "center" }}>
-      <div style={{ fontSize: 32, marginBottom: 8 }}>✓</div>
-      <p style={{ fontWeight: 600, color: "#0f6e56", marginBottom: 4 }}>Submitted!</p>
-      <p style={{ color: "#555", fontSize: 14 }}>Name: <b>{name}</b> · Email: <b>{email}</b></p>
-      <p style={{ color: "#888", fontSize: 12, marginTop: 4 }}>Check browser console for logged data</p>
+      <div style={{ fontSize: 34, marginBottom: 8 }}>✓</div>
+      <p style={{ fontWeight: 600, color: "#4ade80", marginBottom: 4 }}>Submitted!</p>
+      <p style={{ color: "#aaa8a2", fontSize: 15 }}>Name: <b>{name}</b> · Email: <b>{email}</b></p>
+      <p style={{ color: "#666", fontSize: 13, marginTop: 4 }}>Check browser console for logged data</p>
       <button onClick={() => { setSubmitted(false); setName(""); setEmail(""); }}
-        style={{ marginTop: 14, padding: "7px 16px", borderRadius: 7, border: "1px solid #d3d1c7", background: "#fff", cursor: "pointer", fontSize: 13 }}>
+        style={{ marginTop: 14, padding: "7px 16px", borderRadius: 7, border: "1px solid #1a1a2e", background: "transparent", color: "#d8d4cc", cursor: "pointer", fontSize: 14 }}>
         Reset
       </button>
     </div>
@@ -848,22 +1380,22 @@ function FormValidation() {
   return (
     <form onSubmit={handleSubmit} style={{ padding: 24, maxWidth: 360 }}>
       <div style={{ marginBottom: 16 }}>
-        <label style={{ fontSize: 13, fontWeight: 500, display: "block", marginBottom: 6 }}>Name</label>
+        <label style={{ fontSize: 14, fontWeight: 500, display: "block", marginBottom: 6, color: "#d8d4cc" }}>Name</label>
         <input type="text" value={name} placeholder="Enter your name"
           onChange={e => { setName(e.target.value); setErrors(p => ({ ...p, name: "" })); }}
-          style={inp(errors.name ? { borderColor: "#e24b4a" } : {})} />
-        {errors.name && <p style={{ color: "#e24b4a", fontSize: 12, marginTop: 4 }}>{errors.name}</p>}
+          style={inp(errors.name ? { borderColor: "#f87171" } : {})} />
+        {errors.name && <p style={{ color: "#f87171", fontSize: 13, marginTop: 4 }}>{errors.name}</p>}
       </div>
       <div style={{ marginBottom: 20 }}>
-        <label style={{ fontSize: 13, fontWeight: 500, display: "block", marginBottom: 6 }}>Email</label>
+        <label style={{ fontSize: 14, fontWeight: 500, display: "block", marginBottom: 6, color: "#d8d4cc" }}>Email</label>
         <input type="text" value={email} placeholder="Enter your email"
           onChange={e => { setEmail(e.target.value); setErrors(p => ({ ...p, email: "" })); }}
-          style={inp(errors.email ? { borderColor: "#e24b4a" } : {})} />
-        {errors.email && <p style={{ color: "#e24b4a", fontSize: 12, marginTop: 4 }}>{errors.email}</p>}
+          style={inp(errors.email ? { borderColor: "#f87171" } : {})} />
+        {errors.email && <p style={{ color: "#f87171", fontSize: 13, marginTop: 4 }}>{errors.email}</p>}
       </div>
       <button type="submit" style={{
-        background: "#1a1a1a", color: "#fff", border: "none", padding: "9px 22px",
-        borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: "pointer", width: "100%",
+        background: "#4ade80", color: "#07070f", border: "none", padding: "9px 22px",
+        borderRadius: 8, fontSize: 15, fontWeight: 600, cursor: "pointer", width: "100%",
       }}>Submit</button>
     </form>
   );
@@ -883,13 +1415,13 @@ function ApiPagination() {
       .catch(() => setLoadedPage(page));
   }, [page]);
 
-  const td = { padding: "8px 12px", borderBottom: "1px solid #e5e2d8", fontSize: 13, verticalAlign: "top" };
-  const th = { ...td, fontWeight: 600, background: "#f6f5f1", fontSize: 12, textTransform: "uppercase", letterSpacing: 0.5 };
+  const td = { padding: "8px 12px", borderBottom: "1px solid #1a1a2e", fontSize: 14, verticalAlign: "top", color: "#d8d4cc" };
+  const th = { ...td, fontWeight: 600, background: "#0e0e1a", fontSize: 13, textTransform: "uppercase", letterSpacing: 0.5, color: "#aaa8a2" };
 
   return (
     <div style={{ padding: 20 }}>
       {loading ? (
-        <div style={{ padding: 24, textAlign: "center", color: "#888" }}>Loading...</div>
+        <div style={{ padding: 24, textAlign: "center", color: "#666" }}>Loading...</div>
       ) : (
         <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: 16 }}>
           <thead>
@@ -897,7 +1429,7 @@ function ApiPagination() {
           </thead>
           <tbody>
             {posts.map(p => (
-              <tr key={p.id} style={{ background: p.id % 2 === 0 ? "#fafaf7" : "#fff" }}>
+              <tr key={p.id} style={{ background: p.id % 2 === 0 ? "#0e0e1a" : "transparent" }}>
                 <td style={td}>{p.id}</td>
                 <td style={td}>{p.title}</td>
               </tr>
@@ -907,12 +1439,12 @@ function ApiPagination() {
       )}
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
         <button onClick={() => setPage(p => p - 1)} disabled={page === 1}
-          style={{ padding: "6px 14px", borderRadius: 6, border: "1px solid #d3d1c7", background: page === 1 ? "#f1efe8" : "#fff", cursor: page === 1 ? "not-allowed" : "pointer", fontSize: 13 }}>
+          style={{ padding: "6px 14px", borderRadius: 6, border: "1px solid #1a1a2e", background: page === 1 ? "#0a0a12" : "transparent", color: page === 1 ? "#444" : "#d8d4cc", cursor: page === 1 ? "not-allowed" : "pointer", fontSize: 14 }}>
           ← Prev
         </button>
-        <span style={{ fontSize: 13, color: "#555" }}>Page <b>{page}</b></span>
+        <span style={{ fontSize: 14, color: "#aaa8a2" }}>Page <b>{page}</b></span>
         <button onClick={() => setPage(p => p + 1)}
-          style={{ padding: "6px 14px", borderRadius: 6, border: "1px solid #d3d1c7", background: "#fff", cursor: "pointer", fontSize: 13 }}>
+          style={{ padding: "6px 14px", borderRadius: 6, border: "1px solid #1a1a2e", background: "transparent", color: "#d8d4cc", cursor: "pointer", fontSize: 14 }}>
           Next →
         </button>
       </div>
@@ -922,20 +1454,20 @@ function ApiPagination() {
 
 function CounterApp() {
   const [count, setCount] = useState(0);
-  const color = count > 0 ? "#0f6e56" : count < 0 ? "#e24b4a" : "#1a1a1a";
+  const color = count > 0 ? "#4ade80" : count < 0 ? "#f87171" : "#d8d4cc";
   const btn = (bg, clr, border) => ({
     padding: "9px 22px", borderRadius: 8, border: `1px solid ${border}`,
-    background: bg, color: clr, fontSize: 15, fontWeight: 600, cursor: "pointer", minWidth: 80,
+    background: bg, color: clr, fontSize: 16, fontWeight: 600, cursor: "pointer", minWidth: 80,
   });
   return (
     <div style={{ padding: 28, textAlign: "center" }}>
-      <div style={{ fontSize: 64, fontWeight: 700, color, marginBottom: 24, fontVariantNumeric: "tabular-nums" }}>
+      <div style={{ fontSize: 68, fontWeight: 700, color, marginBottom: 24, fontVariantNumeric: "tabular-nums" }}>
         {count}
       </div>
       <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
-        <button onClick={() => setCount(c => c + 1)} style={btn("#e1f5ee", "#0f6e56", "#9fe1cb")}>+ Increase</button>
-        <button onClick={() => setCount(c => c - 1)} style={btn("#fcebeb", "#a32d2d", "#f7c1c1")}>− Decrease</button>
-        <button onClick={() => setCount(0)} style={btn("#f1efe8", "#444", "#d3d1c7")}>Reset</button>
+        <button onClick={() => setCount(c => c + 1)} style={btn("rgba(74,222,128,0.12)", "#4ade80", "rgba(74,222,128,0.35)")}>+ Increase</button>
+        <button onClick={() => setCount(c => c - 1)} style={btn("rgba(248,113,113,0.12)", "#f87171", "rgba(248,113,113,0.35)")}>− Decrease</button>
+        <button onClick={() => setCount(0)} style={btn("transparent", "#aaa8a2", "#1a1a2e")}>Reset</button>
       </div>
     </div>
   );
@@ -944,13 +1476,13 @@ function CounterApp() {
 function ChildInput({ onSend }) {
   const [input, setInput] = useState("");
   return (
-    <div style={{ padding: "14px 20px", background: "#e6f1fb", borderRadius: 10, marginBottom: 14 }}>
-      <p style={{ fontSize: 12, fontWeight: 600, color: "#185fa5", marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>Child Component</p>
+    <div style={{ padding: "14px 20px", background: "rgba(125,211,252,0.1)", borderRadius: 10, marginBottom: 14 }}>
+      <p style={{ fontSize: 13, fontWeight: 600, color: "#7dd3fc", marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>Child Component</p>
       <div style={{ display: "flex", gap: 8 }}>
         <input value={input} onChange={e => setInput(e.target.value)} placeholder="Type a message..."
-          style={{ flex: 1, padding: "8px 12px", borderRadius: 7, border: "1px solid #b5d4f4", fontSize: 13, outline: "none", background: "#fff" }} />
+          style={{ flex: 1, padding: "8px 12px", borderRadius: 7, border: "1px solid rgba(125,211,252,0.3)", fontSize: 14, outline: "none", background: "#0a0a14", color: "#d8d4cc" }} />
         <button onClick={() => { onSend(input); setInput(""); }}
-          style={{ padding: "8px 14px", borderRadius: 7, background: "#185fa5", color: "#fff", border: "none", fontSize: 13, cursor: "pointer" }}>
+          style={{ padding: "8px 14px", borderRadius: 7, background: "#7dd3fc", color: "#07070f", border: "none", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
           Send ↑
         </button>
       </div>
@@ -964,9 +1496,9 @@ function ChildToParent() {
   return (
     <div style={{ padding: 20 }}>
       <ChildInput onSend={val => setReceived(val)} />
-      <div style={{ padding: "14px 20px", background: "#f1efe8", borderRadius: 10 }}>
-        <p style={{ fontSize: 12, fontWeight: 600, color: "#444", marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>Parent Component received:</p>
-        <p style={{ fontSize: 16, fontWeight: 600, color: received ? "#1a1a1a" : "#aaa" }}>{received || "Nothing yet..."}</p>
+      <div style={{ padding: "14px 20px", background: "#0e0e1a", borderRadius: 10 }}>
+        <p style={{ fontSize: 13, fontWeight: 600, color: "#aaa8a2", marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>Parent Component received:</p>
+        <p style={{ fontSize: 17, fontWeight: 600, color: received ? "#d8d4cc" : "#555" }}>{received || "Nothing yet..."}</p>
       </div>
     </div>
   );
@@ -989,7 +1521,7 @@ function ThemeConsumer() {
   return (
     <div style={{ padding: 24, background: isDark ? "#1a1a1a" : "#fff", borderRadius: 12, transition: "all 0.3s" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-        <span style={{ fontSize: 13, fontWeight: 600, color: isDark ? "#c0dd97" : "#444" }}>
+        <span style={{ fontSize: 14, fontWeight: 600, color: isDark ? "#c0dd97" : "#444" }}>
           {isDark ? "🌙 Dark Mode" : "☀️ Light Mode"}
         </span>
         <button onClick={toggleTheme} style={{
@@ -997,13 +1529,13 @@ function ThemeConsumer() {
           borderColor: isDark ? "#444" : "#d3d1c7",
           background: isDark ? "#333" : "#f1efe8",
           color: isDark ? "#fff" : "#1a1a1a",
-          fontSize: 13, cursor: "pointer", transition: "all 0.2s",
+          fontSize: 14, cursor: "pointer", transition: "all 0.2s",
         }}>
           Switch to {isDark ? "Light" : "Dark"}
         </button>
       </div>
       <div style={{ padding: 14, borderRadius: 8, background: isDark ? "#2c2c2a" : "#f6f5f1" }}>
-        <p style={{ color: isDark ? "#d3d1c7" : "#555", fontSize: 14, margin: 0 }}>
+        <p style={{ color: isDark ? "#d3d1c7" : "#555", fontSize: 15, margin: 0 }}>
           This box reads theme from <code style={{ color: isDark ? "#c0dd97" : "#3c3489" }}>ThemeContext</code>. Current: <b style={{ color: isDark ? "#fff" : "#1a1a1a" }}>{theme}</b>
         </p>
       </div>
@@ -1027,27 +1559,27 @@ function CountdownTimer() {
   return (
     <div style={{ padding: 28, textAlign: "center" }}>
       <svg width="140" height="140" style={{ marginBottom: 16 }}>
-        <circle cx="70" cy="70" r={radius} fill="none" stroke="#f1efe8" strokeWidth="10" />
+        <circle cx="70" cy="70" r={radius} fill="none" stroke="#1a1a2e" strokeWidth="10" />
         <circle cx="70" cy="70" r={radius} fill="none"
-          stroke={time === 0 ? "#e24b4a" : "#0f6e56"} strokeWidth="10"
+          stroke={time === 0 ? "#f87171" : "#4ade80"} strokeWidth="10"
           strokeDasharray={circ} strokeDashoffset={circ * (1 - progress)}
           strokeLinecap="round" transform="rotate(-90 70 70)"
           style={{ transition: "stroke-dashoffset 0.8s ease" }} />
         <text x="70" y="76" textAnchor="middle" fontSize="28" fontWeight="700"
-          fill={time === 0 ? "#e24b4a" : "#1a1a1a"}>
+          fill={time === 0 ? "#f87171" : "#d8d4cc"}>
           {time === 0 ? "✓" : time}
         </text>
       </svg>
-      <p style={{ color: "#888", fontSize: 13, marginBottom: 14 }}>
+      <p style={{ color: "#666", fontSize: 14, marginBottom: 14 }}>
         {time === 0 ? "Time's up!" : started ? "Counting down..." : "Press Start"}
       </p>
       <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
         <button onClick={() => setStarted(true)} disabled={time === 0 || started}
-          style={{ padding: "7px 16px", borderRadius: 7, background: "#e1f5ee", color: "#0f6e56", border: "1px solid #9fe1cb", cursor: "pointer", fontSize: 13 }}>
+          style={{ padding: "7px 16px", borderRadius: 7, background: "rgba(74,222,128,0.12)", color: "#4ade80", border: "1px solid rgba(74,222,128,0.35)", cursor: "pointer", fontSize: 14 }}>
           Start
         </button>
         <button onClick={() => { setTime(10); setStarted(false); }}
-          style={{ padding: "7px 16px", borderRadius: 7, background: "#f1efe8", color: "#444", border: "1px solid #d3d1c7", cursor: "pointer", fontSize: 13 }}>
+          style={{ padding: "7px 16px", borderRadius: 7, background: "transparent", color: "#aaa8a2", border: "1px solid #1a1a2e", cursor: "pointer", fontSize: 14 }}>
           Restart
         </button>
       </div>
@@ -1079,22 +1611,22 @@ function Stopwatch() {
   };
   const btn = (bg, border, clr) => ({
     padding: "8px 16px", borderRadius: 7, border: `1px solid ${border}`,
-    background: bg, color: clr, fontSize: 13, fontWeight: 500, cursor: "pointer",
+    background: bg, color: clr, fontSize: 14, fontWeight: 500, cursor: "pointer",
   });
 
   return (
     <div style={{ padding: 28, textAlign: "center" }}>
-      <div style={{ fontSize: 56, fontWeight: 700, fontVariantNumeric: "tabular-nums", color: reverse ? "#e24b4a" : "#1a1a1a", marginBottom: 8 }}>
+      <div style={{ fontSize: 60, fontWeight: 700, fontVariantNumeric: "tabular-nums", color: reverse ? "#f87171" : "#d8d4cc", marginBottom: 8 }}>
         {fmt(time)}
       </div>
-      <p style={{ fontSize: 12, color: "#888", marginBottom: 20 }}>
+      <p style={{ fontSize: 13, color: "#666", marginBottom: 20 }}>
         {reverse ? "▼ Reverse mode" : "▲ Forward mode"} · {running ? "Running" : "Paused"}
       </p>
       <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
-        <button onClick={() => setRunning(true)}  style={btn("#e1f5ee", "#9fe1cb", "#0f6e56")}>Start</button>
-        <button onClick={() => setRunning(false)} style={btn("#faeeda", "#efc97a", "#854f0b")}>Stop</button>
-        <button onClick={() => { setTime(0); setRunning(false); setReverse(false); }} style={btn("#f1efe8", "#d3d1c7", "#444")}>Reset</button>
-        <button onClick={() => setReverse(r => !r)} style={btn(reverse ? "#fcebeb" : "#eeedfe", reverse ? "#f7c1c1" : "#afa9ec", reverse ? "#a32d2d" : "#3c3489")}>
+        <button onClick={() => setRunning(true)}  style={btn("rgba(74,222,128,0.12)", "rgba(74,222,128,0.35)", "#4ade80")}>Start</button>
+        <button onClick={() => setRunning(false)} style={btn("rgba(251,191,36,0.12)", "rgba(251,191,36,0.35)", "#fbbf24")}>Stop</button>
+        <button onClick={() => { setTime(0); setRunning(false); setReverse(false); }} style={btn("transparent", "#1a1a2e", "#aaa8a2")}>Reset</button>
+        <button onClick={() => setReverse(r => !r)} style={btn(reverse ? "rgba(248,113,113,0.12)" : "rgba(196,181,253,0.12)", reverse ? "rgba(248,113,113,0.35)" : "rgba(196,181,253,0.35)", reverse ? "#f87171" : "#c4b5fd")}>
           {reverse ? "▲ Forward" : "▼ Reverse"}
         </button>
       </div>
@@ -1104,24 +1636,24 @@ function Stopwatch() {
 
 function ProgressBar() {
   const [progress, setProgress] = useState(40);
-  const color = progress < 30 ? "#e24b4a" : progress < 70 ? "#ef9f27" : "#1d9e75";
+  const color = progress < 30 ? "#f87171" : progress < 70 ? "#fbbf24" : "#4ade80";
   return (
     <div style={{ padding: 28 }}>
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-        <span style={{ fontSize: 13, fontWeight: 600, color: "#444" }}>Progress</span>
-        <span style={{ fontSize: 13, fontWeight: 700, color }}>{progress}%</span>
+        <span style={{ fontSize: 14, fontWeight: 600, color: "#aaa8a2" }}>Progress</span>
+        <span style={{ fontSize: 14, fontWeight: 700, color }}>{progress}%</span>
       </div>
-      <div style={{ width: "100%", height: 14, background: "#f1efe8", borderRadius: 20, overflow: "hidden", marginBottom: 20 }}>
+      <div style={{ width: "100%", height: 14, background: "#1a1a2e", borderRadius: 20, overflow: "hidden", marginBottom: 20 }}>
         <div style={{ height: "100%", width: `${progress}%`, background: color, borderRadius: 20, transition: "width 0.3s ease, background 0.3s ease" }} />
       </div>
       <input type="range" min="0" max="100" value={progress}
         onChange={e => setProgress(Number(e.target.value))}
         style={{ width: "100%", accentColor: color }} />
       <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
-        <span style={{ fontSize: 11, color: "#aaa" }}>0%</span>
-        <span style={{ fontSize: 11, color: "#aaa" }}>100%</span>
+        <span style={{ fontSize: 12, color: "#555" }}>0%</span>
+        <span style={{ fontSize: 12, color: "#555" }}>100%</span>
       </div>
-      <p style={{ fontSize: 12, color: "#888", marginTop: 12, textAlign: "center" }}>
+      <p style={{ fontSize: 13, color: "#666", marginTop: 12, textAlign: "center" }}>
         {progress < 30 ? "Just started" : progress < 70 ? "In progress" : progress < 100 ? "Almost there!" : "Complete!"}
       </p>
     </div>
@@ -1140,19 +1672,19 @@ function QuestionHeader({ q }) {
   const isLogic = q.type === "logic";
   const isReact = q.type === "react";
   return (
-    <div style={{ background: "#fff", border: "1px solid #e5e2d8", borderRadius: 12, padding: "18px 22px", marginBottom: 14 }}>
+    <div style={{ background: "#0c0c1a", border: "1px solid #1a1a2e", borderRadius: 12, padding: "18px 22px", marginBottom: 14 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
-        <span style={{ fontSize: 11, fontWeight: 500, padding: "3px 9px", borderRadius: 5, background: "#eeedfe", color: "#3c3489" }}>Q{q.id}</span>
-        <span style={{ fontSize: 11, fontWeight: 500, padding: "3px 9px", borderRadius: 5, background: catStyle.bg, color: catStyle.color }}>{q.category}</span>
-        {isLogic && <span style={{ fontSize: 11, fontWeight: 500, padding: "3px 9px", borderRadius: 5, background: "#fbeaf0", color: "#72243e" }}>Logic</span>}
-        {isReact && <span style={{ fontSize: 11, fontWeight: 500, padding: "3px 9px", borderRadius: 5, background: "#e6f1fb", color: "#0c447c" }}>Live Demo</span>}
+        <span style={{ fontSize: 12, fontWeight: 500, padding: "3px 9px", borderRadius: 5, background: "rgba(196,181,253,0.12)", color: "#c4b5fd" }}>Q{q.id}</span>
+        <span style={{ fontSize: 12, fontWeight: 500, padding: "3px 9px", borderRadius: 5, background: catStyle.bg, color: catStyle.color }}>{q.category}</span>
+        {isLogic && <span style={{ fontSize: 12, fontWeight: 500, padding: "3px 9px", borderRadius: 5, background: "rgba(249,168,212,0.12)", color: "#f9a8d4" }}>Logic</span>}
+        {isReact && <span style={{ fontSize: 12, fontWeight: 500, padding: "3px 9px", borderRadius: 5, background: "rgba(125,211,252,0.12)", color: "#7dd3fc" }}>Live Demo</span>}
       </div>
-      <h2 style={{ fontSize: 18, fontWeight: 600, color: "#111", margin: "0 0 6px" }}>{q.title}</h2>
-      <p style={{ color: "#555", fontSize: 14.5, lineHeight: 1.6, margin: 0 }}>{q.description}</p>
+      <h2 style={{ fontSize: 19, fontWeight: 600, color: "#eee", margin: "0 0 6px" }}>{q.title}</h2>
+      <p style={{ color: "#aaa8a2", fontSize: 15.5, lineHeight: 1.6, margin: 0 }}>{q.description}</p>
       <pre style={{
-        background: "#f1efe8", borderRadius: 8, padding: "10px 14px", marginTop: 10,
-        fontFamily: '"SF Mono", Monaco, monospace', fontSize: 12.5, color: "#2c2c2a",
-        lineHeight: 1.6, whiteSpace: "pre-wrap", wordBreak: "break-word",
+        background: "#0a0a14", borderRadius: 8, padding: "10px 14px", marginTop: 10,
+        fontFamily: "'Manrope', sans-serif", fontSize: 13.5, color: "#c9d1d9",
+        lineHeight: 1.6, whiteSpace: "pre-wrap", wordBreak: "break-word", textAlign: "left",
       }}>{q.example}</pre>
     </div>
   );
@@ -1168,16 +1700,16 @@ function QuestionCard({ q }) {
     return (
       <div style={{ marginBottom: 28 }}>
         <QuestionHeader q={q} />
-        <div style={{ background: "#fff", border: "1px solid #e5e2d8", borderRadius: 12, overflow: "hidden" }}>
-          <div style={{ padding: "12px 16px", borderBottom: "1px solid #e5e2d8", background: "#fafaf7", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ fontSize: 13, fontWeight: 600 }}>Theory & Explanation</span>
-            <span style={{ fontSize: 11, padding: "3px 8px", borderRadius: 4, background: "#fce4d9", color: "#b8570a", fontWeight: 500 }}>Concept</span>
+        <div style={{ background: "#0c0c1a", border: "1px solid #1a1a2e", borderRadius: 12, overflow: "hidden" }}>
+          <div style={{ padding: "12px 16px", borderBottom: "1px solid #1a1a2e", background: "#0e0e1a", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span style={{ fontSize: 14, fontWeight: 600, color: "#d8d4cc" }}>Theory & Explanation</span>
+            <span style={{ fontSize: 12, padding: "3px 8px", borderRadius: 4, background: "rgba(251,146,60,0.12)", color: "#fb923c", fontWeight: 500 }}>Concept</span>
           </div>
           <pre style={{
             margin: 0, padding: "16px", overflowX: "auto",
-            fontFamily: '"SF Mono", Monaco, monospace',
-            fontSize: 12.5, lineHeight: 1.65, color: "#1a1a1a",
-            background: "#fafaf7", whiteSpace: "pre-wrap", wordBreak: "break-word",
+            fontFamily: "'Manrope', sans-serif",
+            fontSize: 13.5, lineHeight: 1.65, color: "#c9d1d9", textAlign: "left",
+            background: "#0a0a14", whiteSpace: "pre-wrap", wordBreak: "break-word",
           }}>{q.code1}</pre>
         </div>
       </div>
@@ -1190,23 +1722,23 @@ function QuestionCard({ q }) {
       <div style={{ marginBottom: 28 }}>
         <QuestionHeader q={q} />
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 16 }}>
-          <div style={{ background: "#fff", border: "1px solid #e5e2d8", borderRadius: 12, overflow: "hidden" }}>
-            <div style={{ padding: "12px 16px", borderBottom: "1px solid #e5e2d8", background: "#fafaf7", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontSize: 13, fontWeight: 600 }}>Live Demo</span>
-              <span style={{ fontSize: 11, padding: "3px 8px", borderRadius: 4, background: "#e6f1fb", color: "#0c447c", fontWeight: 500 }}>Interactive</span>
+          <div style={{ background: "#0c0c1a", border: "1px solid #1a1a2e", borderRadius: 12, overflow: "hidden" }}>
+            <div style={{ padding: "12px 16px", borderBottom: "1px solid #1a1a2e", background: "#0e0e1a", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontSize: 14, fontWeight: 600, color: "#d8d4cc" }}>Live Demo</span>
+              <span style={{ fontSize: 12, padding: "3px 8px", borderRadius: 4, background: "rgba(125,211,252,0.12)", color: "#7dd3fc", fontWeight: 500 }}>Interactive</span>
             </div>
             <LiveComp />
           </div>
-          <div style={{ background: "#fff", border: "1px solid #e5e2d8", borderRadius: 12, overflow: "hidden" }}>
-            <div style={{ padding: "12px 16px", borderBottom: "1px solid #e5e2d8", background: "#fafaf7", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontSize: 13, fontWeight: 600 }}>Solution Code</span>
-              <span style={{ fontSize: 11, padding: "3px 8px", borderRadius: 4, background: "#e1f5ee", color: "#0f6e56", fontWeight: 500 }}>React</span>
+          <div style={{ background: "#0c0c1a", border: "1px solid #1a1a2e", borderRadius: 12, overflow: "hidden" }}>
+            <div style={{ padding: "12px 16px", borderBottom: "1px solid #1a1a2e", background: "#0e0e1a", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontSize: 14, fontWeight: 600, color: "#d8d4cc" }}>Solution Code</span>
+              <span style={{ fontSize: 12, padding: "3px 8px", borderRadius: 4, background: "rgba(94,234,212,0.12)", color: "#5eead4", fontWeight: 500 }}>React</span>
             </div>
             <pre style={{
               margin: 0, padding: "16px", overflowX: "auto",
-              fontFamily: '"SF Mono", Monaco, monospace',
-              fontSize: 12.5, lineHeight: 1.65, color: "#1a1a1a",
-              background: "#fafaf7", whiteSpace: "pre-wrap", wordBreak: "break-word",
+              fontFamily: "'Manrope', sans-serif",
+              fontSize: 13.5, lineHeight: 1.65, color: "#c9d1d9", textAlign: "left",
+              background: "#0a0a14", whiteSpace: "pre-wrap", wordBreak: "break-word",
             }}>{q.code}</pre>
           </div>
         </div>
@@ -1221,7 +1753,7 @@ function QuestionCard({ q }) {
         <CodePanel
           label="Solution"
           tag="Logic"
-          tagStyle={{ background: "#fbeaf0", color: "#72243e" }}
+          tagStyle={{ background: "rgba(249,168,212,0.12)", color: "#f9a8d4" }}
           code={codes.code1}
           onCodeChange={v => setCodes(p => ({ ...p, code1: v }))}
         />
@@ -1230,14 +1762,14 @@ function QuestionCard({ q }) {
           <CodePanel
             label="Solution 1"
             tag="With predefined functions"
-            tagStyle={{ background: "#e1f5ee", color: "#0f6e56" }}
+            tagStyle={{ background: "rgba(94,234,212,0.12)", color: "#5eead4" }}
             code={codes.code1}
             onCodeChange={v => setCodes(p => ({ ...p, code1: v }))}
           />
           <CodePanel
             label="Solution 2"
             tag="Without predefined functions"
-            tagStyle={{ background: "#faeeda", color: "#854f0b" }}
+            tagStyle={{ background: "rgba(251,191,36,0.12)", color: "#fbbf24" }}
             code={codes.code2}
             onCodeChange={v => setCodes(p => ({ ...p, code2: v }))}
           />
@@ -1264,34 +1796,38 @@ export default function CodingSection() {
   });
 
   return (
-    <div style={{ background: "#f6f5f1", minHeight: "100vh" }}>
+    <div style={{ background: "#07070f", minHeight: "100vh" }}>
       {/* Sticky filter bar */}
-      <div style={{ position: "sticky", top: 0, zIndex: 20, background: "#fff", borderBottom: "1px solid #e5e2d8", padding: "12px 24px" }}>
-        <div style={{ maxWidth: 980, margin: "0 auto", display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-          {ALL_CATS.map(cat => (
-            <button key={cat} onClick={() => setFilter(cat)} style={{
-              padding: "5px 14px", borderRadius: 20, border: "1px solid",
-              borderColor: filter === cat ? "#1a1a1a" : "#d3d1c7",
-              background: filter === cat ? "#1a1a1a" : "#fff",
-              color: filter === cat ? "#fff" : "#555",
-              fontSize: 12, fontWeight: 500, cursor: "pointer", transition: "all 0.15s",
-            }}>
-              {cat}
-              <span style={{ marginLeft: 5, fontSize: 10, opacity: 0.6 }}>
-                {cat === "All" ? QUESTIONS.length : QUESTIONS.filter(q => q.category === cat).length}
-              </span>
-            </button>
-          ))}
+      <div style={{ position: "sticky", top: 0, zIndex: 20, background: "#0c0c1e", borderBottom: "1px solid #111120", padding: "12px 24px" }}>
+        <div style={{ maxWidth: "min(1400px, 96vw)", margin: "0 auto", display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+          {ALL_CATS.map(cat => {
+            const isActive = filter === cat;
+            const catAccent = CATEGORY_COLORS[cat]?.color || "#eeeeee";
+            return (
+              <button key={cat} onClick={() => setFilter(cat)} style={{
+                padding: "5px 14px", borderRadius: 20, border: "1px solid",
+                borderColor: isActive ? `${catAccent}55` : "#1a1a2e",
+                background: isActive ? `${catAccent}22` : "transparent",
+                color: isActive ? catAccent : "#aaa8a2",
+                fontSize: 13, fontWeight: 500, cursor: "pointer", transition: "all 0.15s",
+              }}>
+                {cat}
+                <span style={{ marginLeft: 5, fontSize: 11, opacity: 0.6 }}>
+                  {cat === "All" ? QUESTIONS.length : QUESTIONS.filter(q => q.category === cat).length}
+                </span>
+              </button>
+            );
+          })}
           <div style={{ marginLeft: "auto", position: "relative" }}>
-            <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#aaa", fontSize: 12 }}>🔍</span>
+            <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#666", fontSize: 13 }}>🔍</span>
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Search..."
               style={{
-                width: 180, background: "#f6f5f1", border: "1px solid #d3d1c7",
+                width: 180, background: "#0c0c1a", border: "1px solid #1a1a2e",
                 borderRadius: 8, padding: "6px 10px 6px 28px",
-                fontSize: 12, outline: "none", color: "#1a1a1a",
+                fontSize: 13, outline: "none", color: "#d8d4cc",
               }}
             />
           </div>
@@ -1299,9 +1835,9 @@ export default function CodingSection() {
       </div>
 
       {/* Questions */}
-      <div style={{ maxWidth: 980, margin: "0 auto", padding: "24px 24px 80px" }}>
+      <div style={{ maxWidth: "min(1400px, 96vw)", margin: "0 auto", padding: "24px 24px 80px" }}>
         {filtered.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "80px 0", color: "#aaa", fontSize: 14 }}>
+          <div style={{ textAlign: "center", padding: "80px 0", color: "#666", fontSize: 15 }}>
             No questions found
           </div>
         ) : (

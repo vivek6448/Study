@@ -1,5 +1,26 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import CodingSection from "./CodingSection";
+
+const REVIEWED_STORAGE_KEY = "frontend-prep-reviewed";
+const LAST_CAT_STORAGE_KEY = "frontend-prep-last-category";
+
+function loadReviewed() {
+  try {
+    const stored = localStorage.getItem(REVIEWED_STORAGE_KEY);
+    return stored ? JSON.parse(stored) : {};
+  } catch {
+    return {};
+  }
+}
+
+function loadLastCategory(fallback) {
+  try {
+    const stored = localStorage.getItem(LAST_CAT_STORAGE_KEY);
+    return stored && CATEGORIES.some(c => c.id === stored) ? stored : fallback;
+  } catch {
+    return fallback;
+  }
+}
 
 const CATEGORIES = [
 {
@@ -1373,6 +1394,19 @@ class File {
   }
 }`
       },
+      {
+        q: "What is WeakMap, and why use it over a regular Map for a cache?",
+        a_en: "A regular Map holds a strong reference to its keys — even if nothing else references an object, the Map keeps it alive forever, a memory leak if used as a cache keyed by objects that come and go. WeakMap keys must be objects and are held weakly — once nothing else references that object, the GC can collect it, and its cache entry silently disappears too. Tradeoff: not iterable, no .size.",
+        a_hi: "Regular Map apni keys ko strong reference se hold karta hai — object kahin aur use na ho tab bhi Map use zinda rakhta hai, cache ke liye memory leak. WeakMap keys object honi chahiye aur weakly hold hoti hain — object discard hote hi GC collect kar leta hai, cache entry bhi gayab. Tradeoff: iterable nahi, .size nahi.",
+        code: `const cache = new WeakMap();
+function process(obj) {
+  if (cache.has(obj)) return cache.get(obj);
+  const result = expensiveOp(obj);
+  cache.set(obj, result);
+  return result;
+}
+// If obj is discarded everywhere else, its cache entry is GC'd automatically`
+      },
     ],
   },
 
@@ -1834,6 +1868,18 @@ new PerformanceObserver((list) => {
     console.log(entry.name, entry.startTime);
   }
 }).observe({ type: 'largest-contentful-paint', buffered: true });`
+      },
+      {
+        q: "requestIdleCallback vs requestAnimationFrame — different tools for what?",
+        a_en: "rAF runs right before the next repaint, at a predictable moment tied to refresh rate — correct for anything visual that must stay in sync with the screen (animations, layout reads). requestIdleCallback runs only when the browser genuinely has spare time left in a frame after higher-priority work — correct for non-urgent background work (analytics batching, cache pre-warming) that should never compete with anything the user can feel.",
+        a_hi: "rAF next repaint se theek pehle chalta hai, refresh rate se sync predictable moment pe — visual cheezon (animations) ke liye sahi. requestIdleCallback tabhi chalta hai jab browser ke paas genuinely spare time bache — non-urgent background kaam (analytics, cache warm) ke liye sahi, jo user ko feel na ho.",
+        code: `requestAnimationFrame(() => {
+  el.style.transform = \`translateX(\${pos}px)\`; // synced with repaint
+});
+
+requestIdleCallback(() => {
+  sendAnalyticsBatch(); // only runs when the browser is genuinely idle
+}, { timeout: 2000 });`
       },
     ],
   },
@@ -3260,6 +3306,40 @@ function App() {
   const [theme, setTheme] = useLocalStorage('theme', 'light');
 }`
       },
+      {
+        q: "What is forwardRef, and when do you actually need it?",
+        a_en: "By default, the ref prop isn't passed through to a function component like a normal prop — React reserves it internally. forwardRef explicitly opts a component into receiving a ref and forwarding it to a specific inner element, which matters whenever you build a reusable wrapper (a custom Input/Button) and consumers need to call .focus() on it directly, the same way they could on a plain <input>.",
+        a_hi: "Default mein, ref prop function component ko normal prop ki tarah nahi milta — React use internally reserve karta hai. forwardRef component ko explicitly ref receive karne aur forward karne deta hai — jab reusable wrapper (custom Input) banao aur consumers ko .focus() directly call karna ho.",
+        code: `const Input = forwardRef((props, ref) => <input ref={ref} {...props} />);
+// now <Input ref={myRef} /> actually reaches the real DOM node
+myRef.current.focus();`
+      },
+      {
+        q: "What are Portals, and what problem do they solve?",
+        a_en: "createPortal(children, domNode) renders a component's output into a DOM node outside its parent's actual DOM hierarchy — while staying inside the normal React tree for context, event bubbling, and state. This solves the modal/tooltip clipping problem: an ancestor's overflow:hidden or z-index can't clip a modal rendered at document.body, even though its state and handlers behave exactly as if rendered in place.",
+        a_hi: "createPortal(children, domNode) component ka output ek DOM node mein render karta hai jo parent ki actual DOM hierarchy se bahar hai — par React tree (context, event bubbling, state) ke andar hi rehta hai. Isse modal/tooltip clipping problem solve hoti hai — ancestor ka overflow:hidden document.body pe render hue modal ko clip nahi kar sakta.",
+        code: `function Modal({ children }) {
+  return createPortal(
+    <div className="modal-overlay">{children}</div>,
+    document.body
+  );
+}
+// Modal escapes any ancestor's overflow:hidden/z-index stacking issues`
+      },
+      {
+        q: "What is useSyncExternalStore for?",
+        a_en: "The correct, low-level way to subscribe a component to state living outside React (a browser API, or a third-party store like Zustand/Redux under the hood) without tearing — every component reading that store during the same render sees a consistent snapshot, even under React 18's interruptible concurrent rendering. Most app code never calls it directly since state libraries already use it internally.",
+        a_hi: "Ye ek component ko React ke bahar ke state (browser API, ya Zustand/Redux jaisa store) se subscribe karne ka correct tareeka hai bina tearing ke — same render mein har component consistent snapshot dekhta hai, concurrent rendering mein bhi. Zyaadatar app code isse directly call nahi karta, state libraries internally use karti hain.",
+        code: `function useWindowWidth() {
+  return useSyncExternalStore(
+    (callback) => {
+      window.addEventListener('resize', callback);
+      return () => window.removeEventListener('resize', callback);
+    },
+    () => window.innerWidth
+  );
+}`
+      },
     ],
   },
 
@@ -3502,6 +3582,24 @@ hydrateRoot(container, <App />);
 // Migration note — just swap these two lines
 // No other code changes needed
 // Concurrent features are opt-in via new APIs`
+      },
+      {
+        q: "React 19: what do useActionState and useOptimistic do?",
+        a_en: "useActionState(action, initialState) wires a form directly to an async action and gives back the latest returned state, a wrapped action for <form action={...}>, and an isPending flag — collapsing manual loading/error juggling. useOptimistic(state, updateFn) shows a provisional value immediately while the real async action is in flight, then reconciles back automatically once it resolves — no manual snapshot/rollback needed.",
+        a_hi: "useActionState(action, initialState) form ko directly async action se jodta hai aur latest state, wrapped action, aur isPending flag deta hai — manual loading/error juggling khatam. useOptimistic(state, updateFn) turant provisional value dikhata hai jab tak real async action chal raha ho, resolve hone pe khud reconcile ho jaata hai.",
+        code: `function AddComment({ addCommentAction }) {
+  const [state, formAction, isPending] = useActionState(addCommentAction, null);
+  return <form action={formAction}>
+    <input name="text" />
+    <button disabled={isPending}>{isPending ? "Posting..." : "Post"}</button>
+  </form>;
+}
+
+function CommentList({ comments, addComment }) {
+  const [optimisticComments, addOptimistic] = useOptimistic(
+    comments, (state, newComment) => [...state, newComment]
+  );
+}`
       },
     ],
   },
@@ -5590,24 +5688,779 @@ const MyRenderer = {
       },
     ],
   },
+  {
+    id: "css-core", label: "Box, Flex & Grid", icon: "📦", color: "#2965F1", section: "CSS",
+    def_en: "CSS controls layout, color, and typography, kept deliberately separate from HTML's structure. The box model, Flexbox, and Grid are the three layout engines every modern UI is built on.",
+    def_hi: "CSS layout, color, aur typography control karta hai — HTML ki structure se alag rakha jaata hai. Box model, Flexbox, aur Grid teen layout engines hain jin pe har modern UI banti hai.",
+    questions: [
+      {
+        q: "Explain the CSS Box Model.",
+        a_en: "Every element is a box: content → padding → border → margin, from inside out. Default box-sizing: content-box means width only sets the content area, so padding/border add on top. Most resets switch to border-box so width includes padding+border.",
+        a_hi: "Har element ek box hai: content → padding → border → margin, andar se baahar. Default box-sizing: content-box mein width sirf content set karta hai, padding/border upar add hote hain. Resets border-box use karte hain taaki width mein sab shaamil ho.",
+        code: `.card {
+  box-sizing: border-box; /* width includes padding+border */
+  width: 300px;
+  padding: 20px;
+  border: 2px solid #333;
+  margin: 16px;
+}
+/* content-box (default): actual rendered width = 300+40+4 = 344px
+   border-box: actual rendered width = exactly 300px */`
+      },
+      {
+        q: "Flexbox vs Grid — when do you use each?",
+        a_en: "Flexbox is one-dimensional — items flow and wrap along a single axis (row or column), ideal for navbars, button groups, cards that wrap naturally. Grid is two-dimensional — rows and columns defined together, items placed precisely, ideal for page-level layout. Most real UIs combine both: Grid for structure, Flexbox inside cells.",
+        a_hi: "Flexbox one-dimensional hai — items ek axis (row/column) pe flow karte hain, navbars/button groups/wrapping cards ke liye ideal. Grid two-dimensional hai — rows aur columns saath define hote hain, page-level layout ke liye best. Real UIs dono combine karte hain.",
+        code: `.navbar { display: flex; justify-content: space-between; align-items: center; }
+
+.page {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  grid-template-rows: auto 1fr auto;
+  min-height: 100vh;
+}
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}`
+      },
+      {
+        q: "justify-content vs align-items — which axis is which?",
+        a_en: "justify-content aligns along the main axis (flex-direction's own direction — horizontal by default). align-items aligns along the cross axis (perpendicular). Switching flex-direction to column swaps which one controls 'horizontal' vs 'vertical' — that's the #1 source of confusion.",
+        a_hi: "justify-content main axis pe align karta hai (flex-direction ki direction — default horizontal). align-items cross axis pe (perpendicular). flex-direction: column karne se dono ka matlab swap ho jaata hai — sabse common confusion yahi hai.",
+        code: `.row {
+  display: flex;
+  flex-direction: row;         /* main axis = horizontal */
+  justify-content: center;     /* horizontal centering */
+  align-items: center;         /* vertical centering */
+}
+.col {
+  display: flex;
+  flex-direction: column;      /* main axis = vertical now */
+  justify-content: center;     /* VERTICAL centering now */
+  align-items: center;         /* horizontal centering now */
+}`
+      },
+      {
+        q: "Explain position: static, relative, absolute, fixed, and sticky.",
+        a_en: "static: default flow. relative: offsets from its own spot, still reserves that space. absolute: removed from flow, positioned against nearest non-static ancestor. fixed: removed from flow, pinned to the viewport, ignores scroll. sticky: relative until a scroll threshold, then behaves fixed within its parent's bounds.",
+        a_hi: "static: default flow. relative: apni jagah se offset, space reserved rehta hai. absolute: flow se hata, nearest positioned ancestor ke relative. fixed: viewport ke relative, scroll ignore karta hai. sticky: threshold tak relative, phir fixed jaisa within parent.",
+        code: `.tooltip-parent { position: relative; }
+.tooltip { position: absolute; top: 0; right: 0; }
+
+.navbar { position: fixed; top: 0; width: 100%; }
+
+.table-header {
+  position: sticky;
+  top: 0; /* sticks once it hits the top of its scroll container */
+}`
+      },
+      {
+        q: "What is CSS specificity and how is it calculated?",
+        a_en: "Specificity decides which conflicting rule wins: inline styles > IDs > classes/attributes/pseudo-classes > element/pseudo-element selectors. Equal specificity is broken by source order — the later rule wins. !important overrides all of this and should be used sparingly.",
+        a_hi: "Specificity decide karta hai conflicting rules mein kaun jeetega: inline > ID > class/attribute/pseudo-class > element selector. Equal specificity mein baad wala rule jeet ta hai. !important sab override karta hai — sparingly use karo.",
+        code: `/* specificity: 0-0-1 (element) */
+p { color: blue; }
+
+/* specificity: 0-1-0 (class) — wins */
+.text { color: green; }
+
+/* specificity: 1-0-0 (id) — wins over both */
+#main { color: red; }
+
+/* wins over everything except another !important */
+p { color: orange !important; }`
+      },
+      {
+        q: "How does CSS specificity interact with the cascade?",
+        a_en: "The cascade resolves conflicts in order: origin/importance first (browser < user < author, but !important flips this), then specificity, then source order as the final tiebreaker. Understanding all three — not specificity alone — is what lets you predict which rule actually wins.",
+        a_hi: "Cascade order mein conflicts resolve karta hai: origin/importance pehle (browser < user < author, !important flip karta hai), phir specificity, phir source order tiebreaker. Teeno samajhna zaroori hai, sirf specificity nahi.",
+        code: `/* Same specificity — later wins */
+.btn { background: blue; }
+.btn { background: green; } /* wins — comes later */
+
+/* Different origin — !important from author beats normal user-agent style */
+button { all: revert; } /* reset to browser default */`
+      },
+      {
+        q: "rem vs em vs % vs vw/vh — how do these units differ?",
+        a_en: "px is fixed and doesn't scale. em is relative to the current element's own font-size and compounds when nested. rem is relative to the root <html> font-size only — no compounding, which is why it's the modern default. % is relative to the parent's corresponding property. vw/vh are relative to 1% of viewport width/height.",
+        a_hi: "px fixed hai, scale nahi hota. em current element ke font-size ke relative hai aur nested hone pe compound hota hai. rem sirf root <html> font-size ke relative — koi compounding nahi, isliye modern default. % parent ki property ke relative. vw/vh viewport ke 1% ke relative.",
+        code: `html { font-size: 16px; }
+.box {
+  font-size: 1.5rem;   /* always 24px, regardless of nesting */
+  padding: 1em;        /* relative to THIS element's own font-size */
+  width: 80%;           /* relative to parent's width */
+  height: 50vh;          /* 50% of viewport height */
+}`
+      },
+      {
+        q: "What are CSS custom properties (variables), and how do they differ from Sass variables?",
+        a_en: "var(--name) values are live, runtime, and cascade-aware — readable/writable via JS and can be overridden at any scope, which is exactly how CSS-based dark mode toggles work. Sass variables are resolved entirely at compile time and simply don't exist in the final CSS.",
+        a_hi: "var(--name) values live, runtime, aur cascade-aware hain — JS se read/write ho sakte hain aur kisi bhi scope pe override ho sakte hain — isi se CSS dark mode toggle kaam karta hai. Sass variables compile time pe resolve ho jaate hain, final CSS mein exist hi nahi karte.",
+        code: `:root { --accent: #4f46e5; --gap: 16px; }
+[data-theme="dark"] { --accent: #a78bfa; }
+
+.btn { background: var(--accent); padding: var(--gap); }
+
+/* JS can read/write live */
+document.documentElement.style.setProperty('--accent', 'crimson');`
+      },
+      {
+        q: "What are pseudo-classes vs pseudo-elements?",
+        a_en: "Pseudo-classes (single colon — :hover, :nth-child, :focus) select an element based on state or position. Pseudo-elements (double colon — ::before, ::after, ::first-letter) select a sub-part of an element's content, including content generated purely via CSS.",
+        a_hi: "Pseudo-classes (single colon — :hover, :nth-child, :focus) element ki state/position ke basis pe select karte hain. Pseudo-elements (double colon — ::before, ::after) content ka sub-part select karte hain, generated content sahit.",
+        code: `a:hover { color: crimson; }
+li:nth-child(odd) { background: #f5f5f5; }
+
+.required::after { content: " *"; color: red; }
+p::first-letter { font-size: 2em; font-weight: bold; }`
+      },
+      {
+        q: "How do container queries differ from media queries?",
+        a_en: "A media query only knows the viewport size, so the same component can't adapt to the space it's actually given in different layouts. A container query responds to the size of a specific ancestor marked container-type — the same card can genuinely be reusable across a wide column and a narrow sidebar.",
+        a_hi: "Media query sirf viewport size jaanta hai, isliye same component alag layouts mein apni actual space ke hisaab se adapt nahi kar sakta. Container query ek specific ancestor (container-type) ke size ke response mein hota hai — same card wide column aur narrow sidebar dono mein genuinely reusable.",
+        code: `.card-slot { container-type: inline-size; }
+
+@container (min-width: 400px) {
+  .card { grid-template-columns: 120px 1fr; }
+}
+/* reacts to the CONTAINER's width, not the viewport's */`
+      },
+      {
+        q: "What does the :has() selector unlock?",
+        a_en: ":has() lets a selector match based on what's inside it — the 'parent selector' CSS lacked for years. form:has(:invalid) styles a form only while it contains an invalid field, closing a real gap that previously required JavaScript-driven conditional classes.",
+        a_hi: ":has() ek selector ko uske andar ke content ke basis pe match karne deta hai — CSS ka missing 'parent selector'. form:has(:invalid) form ko tabhi style karta hai jab uske andar invalid field ho — pehle isko JS-driven classes se karna padta tha.",
+        code: `label:has(input:checked) { background: #eef2ff; font-weight: 600; }
+.card:has(img) { grid-template-rows: auto 1fr; }
+form:has(:invalid) { border-color: crimson; }`
+      },
+      {
+        q: "What are CSS logical properties, and why prefer them over left/top?",
+        a_en: "margin-left/top are tied to a fixed physical direction and silently break under RTL languages, since 'left' doesn't mean 'start of line' once text direction flips. Logical properties (margin-inline-start, padding-block) describe position relative to the current writing mode, so the layout adapts automatically for dir=\"rtl\" with zero extra CSS.",
+        a_hi: "margin-left/top ek fixed physical direction se bandhe hain aur RTL languages mein silently break hote hain. Logical properties (margin-inline-start, padding-block) current writing mode ke relative position describe karte hain, isliye dir=\"rtl\" mein automatically adapt ho jaate hain.",
+        code: `.card {
+  margin-inline-start: 16px; /* left in LTR, right in RTL — automatic */
+  padding-block: 12px;       /* top+bottom, direction-agnostic */
+}`
+      },
+      {
+        q: "How do you center a div — and why did this used to be hard?",
+        a_en: "margin: 0 auto centers horizontally only, and needs an explicit width. Flexbox (display: flex; justify-content: center; align-items: center) centers on both axes regardless of the child's size, which is why it replaced older tricks like absolute positioning with negative margins for vertical centering.",
+        a_hi: "margin: 0 auto sirf horizontal center karta hai, explicit width chahiye. Flexbox (justify-content + align-items: center) dono axes pe center karta hai, kisi bhi child size ke saath — isliye purani tricks (negative margin absolute positioning) replace ho gayi.",
+        code: `.center-h { width: 300px; margin: 0 auto; }
+
+.center-both {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}`
+      },
+      {
+        q: "What is BEM, and why does it help avoid specificity fights?",
+        a_en: "BEM (Block__Element--Modifier) is a naming convention, not a tool — card, card__title, card--featured. Every class stays equally specific (a single class selector), so styles compose predictably instead of fighting each other, and the structure is readable straight from the class names.",
+        a_hi: "BEM (Block__Element--Modifier) ek naming convention hai — card, card__title, card--featured. Har class equally specific rehti hai (single class selector), isliye styles predictably compose hote hain, aur class names se hi structure samajh aata hai.",
+        code: `<div class="card card--featured">
+  <h2 class="card__title card__title--active">Title</h2>
+</div>
+
+.card { }
+.card__title { }
+.card--featured { }
+.card__title--active { }`
+      },
+      {
+        q: "How does the CSS cascade layers feature (@layer) help with third-party CSS?",
+        a_en: "@layer lets you name cascade layers and fix their priority order independent of specificity — a rule in an earlier-declared layer always loses to a later one, no matter which selector inside is more specific. This safely layers a reset → a component library → your own overrides, without needing ever-more-specific selectors or !important to beat a third-party library.",
+        a_hi: "@layer cascade layers ko naam de kar unki priority order fix karta hai, specificity se independent — earlier layer ka rule hamesha baad wale se haarta hai, selector kitna bhi specific ho. Isse reset → library → apne overrides safely layer ho sakte hain, !important ki zaroorat nahi.",
+        code: `@layer reset, components, utilities;
+
+@layer utilities {
+  .text-center { text-align: center; } /* always wins over components layer */
+}`
+      },
+      {
+        q: "What's the difference between visibility: hidden and display: none?",
+        a_en: "display: none removes the element from the render tree entirely — zero space, invisible to screen readers, siblings reflow to fill the gap. visibility: hidden keeps its layout space reserved (an invisible hole) but a descendant can re-show itself via visibility: visible, which display: none never allows.",
+        a_hi: "display: none element ko render tree se poori tarah hata deta hai — zero space, screen reader se bhi gayab, siblings reflow ho jaate hain. visibility: hidden layout space reserve rakhta hai (invisible hole), aur ek descendant visibility: visible se dobara dikh sakta hai jo display: none mein possible nahi.",
+        code: `.gone   { display: none; }      /* no space, layout reflows */
+.hidden { visibility: hidden; }  /* space reserved, invisible hole */
+
+.hidden .child { visibility: visible; } /* child CAN reappear — impossible with display:none */`
+      },
+    ],
+  },
+
+  {
+    id: "html-a11y", label: "Semantic HTML", icon: "🏷", color: "#5B8DEF", section: "CSS",
+    def_en: "Semantic HTML tags describe what content actually means, not just how it looks — this is what search engines, screen readers, and browser accessibility trees rely on to understand a page's real structure.",
+    def_hi: "Semantic HTML tags batate hain content ka actual matlab kya hai, sirf dikhna nahi — isi pe search engines, screen readers, aur browser accessibility trees depend karte hain page ki real structure samajhne ke liye.",
+    questions: [
+      {
+        q: "Why do semantic tags matter over a div-only markup?",
+        a_en: "<div>/<span> carry zero meaning — only CSS classes convey structure, invisible to any automated system. <article>, <nav>, <header> tell a crawler or screen reader exactly what a region is, which is a genuine SEO ranking signal and lets assistive tech announce meaningful landmarks instead of undifferentiated div soup.",
+        a_hi: "<div>/<span> ka koi meaning nahi — sirf CSS classes structure batate hain jo automated systems ko nahi dikhta. <article>, <nav>, <header> crawler/screen reader ko exact batate hain region kya hai — genuine SEO signal, aur assistive tech meaningful landmarks announce kar sakta hai.",
+        code: `<!-- Semantic -->
+<article>
+  <header><h2>Post title</h2></header>
+  <p>...</p>
+</article>
+
+<!-- Non-semantic — visually identical, zero structural meaning -->
+<div><div><div>Post title</div></div><div>...</div></div>`
+      },
+      {
+        q: "section vs article vs aside — how do you choose?",
+        a_en: "<article> is self-contained and independently distributable — it should still make sense if syndicated elsewhere (a blog post). <section> groups related content thematically within a page without needing to stand alone. <aside> marks content tangential to the main flow — a reader could skip it without losing the core meaning.",
+        a_hi: "<article> self-contained hai — kahin aur syndicate ho toh bhi sense banata hai (blog post). <section> related content ko thematically group karta hai, standalone hone ki zaroorat nahi. <aside> main flow se tangential content — skip karne pe core meaning nahi khota.",
+        code: `<article>
+  <h1>Blog Post</h1>
+  <section>Introduction...</section>
+  <aside>Related links</aside>
+</article>`
+      },
+      {
+        q: "What's the difference between <b> and <strong>, or <i> and <em>?",
+        a_en: "They render visually identical by default, but the difference is semantic. <strong>/<em> signal genuine importance/emphasis — screen readers announce them differently. <b>/<i> are purely stylistic with zero implied meaning. If you'd emphasize it out loud, use strong/em; if it's purely visual, use b/i or CSS font-weight.",
+        a_hi: "Dono visually identical dikhte hain, par difference semantic hai. <strong>/<em> genuine importance/emphasis signal karte hain — screen readers alag announce karte hain. <b>/<i> purely stylistic hain, koi meaning nahi. Zor se bolte waqt emphasize karoge toh strong/em, warna sirf visual.",
+        code: `<b>bold, purely stylistic</b>
+<strong>genuinely important — screen readers add emphasis</strong>`
+      },
+      {
+        q: "How do you make a custom widget accessible with ARIA — and when should you not need to?",
+        a_en: "Use semantic HTML first; a real <button> is already fully keyboard/screen-reader accessible with zero ARIA. Reach for ARIA (role, aria-expanded, aria-live) only when no native element covers the case — a custom dropdown or live-updating toast — since slapping role=\"button\" on a <div> means you must then hand-reimplement keyboard support yourself.",
+        a_hi: "Pehle semantic HTML use karo; asli <button> already fully accessible hai bina ARIA ke. ARIA (role, aria-expanded, aria-live) tabhi use karo jab koi native element cover na kare — custom dropdown ya live toast. <div> pe role=\"button\" lagane se keyboard support khud implement karna padega.",
+        code: `<!-- Prefer -->
+<button aria-expanded={open}>Menu</button>
+
+<!-- Only when no native element fits -->
+<div role="alert" aria-live="polite">Item added to cart</div>`
+      },
+      {
+        q: "What is a focus trap, and why does a modal need one?",
+        a_en: "Without one, Tab eventually moves focus past the open modal onto page content behind it — invisible to a mouse user but disorienting for keyboard/screen-reader users. A focus trap constrains Tab/Shift+Tab to the modal's own elements, moves focus in on open, and restores it to the trigger on close.",
+        a_hi: "Iske bina, Tab modal se aage page content pe chala jaata hai — mouse user ko nahi dikhta par keyboard/screen-reader user ke liye disorienting. Focus trap Tab ko modal ke andar hi rakhta hai, open pe focus andar le jaata hai, close pe wapas trigger pe.",
+        code: `function useFocusTrap(ref, isOpen) {
+  useEffect(() => {
+    if (!isOpen) return;
+    const el = ref.current;
+    const focusables = el.querySelectorAll('button, a, input, [tabindex]');
+    focusables[0]?.focus();
+    const onKey = (e) => {
+      if (e.key !== 'Tab') return;
+      const first = focusables[0], last = focusables[focusables.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    };
+    el.addEventListener('keydown', onKey);
+    return () => el.removeEventListener('keydown', onKey);
+  }, [isOpen]);
+}`
+      },
+      {
+        q: "What are skip links, and why do they matter?",
+        a_en: "A skip link is a normally hidden link, the first focusable element on the page, reading 'Skip to main content' — visible only on keyboard focus. Without one, a keyboard/screen-reader user must Tab through the entire repeated header/nav on every page load before reaching unique content, a cost a mouse user's eyes never pay.",
+        a_hi: "Skip link normally hidden hota hai, page ka pehla focusable element, 'Skip to main content' — sirf keyboard focus pe dikhta hai. Iske bina, keyboard/screen-reader user har page pe pura repeated header/nav Tab karke jaana padta hai unique content tak.",
+        code: `<a href="#main" class="skip-link">Skip to main content</a>
+<style>
+  .skip-link { position: absolute; left: -9999px; }
+  .skip-link:focus { left: 8px; top: 8px; }
+</style>`
+      },
+      {
+        q: "What are WCAG conformance levels A, AA, and AAA?",
+        a_en: "WCAG organizes accessibility around four principles (POUR: Perceivable, Operable, Understandable, Robust) and three progressive levels — A (bare baseline), AA (what most legal requirements like ADA/Section 508 actually target), and AAA (often impractical for every piece of content). AA is the realistic target for most real projects.",
+        a_hi: "WCAG char principles pe organized hai (POUR) aur teen levels — A (bare minimum), AA (jo zyaadatar legal requirements jaise ADA target karte hain), AAA (har content ke liye often impractical). Real projects mein AA realistic target hai.",
+      },
+    ],
+  },
+
+  {
+    id: "ts-fundamentals", label: "Type System", icon: "🔷", color: "#3178C6", section: "TypeScript",
+    def_en: "TypeScript is a superset of JavaScript that adds static type checking, caught at compile time in the editor rather than as a runtime crash. All types are stripped away at compile time — the browser only ever runs plain JS.",
+    def_hi: "TypeScript JavaScript ka superset hai jo static type checking add karta hai — editor mein hi compile-time pe pakda jaata hai, runtime crash nahi banta. Compile time pe saare types strip ho jaate hain — browser sirf plain JS run karta hai.",
+    questions: [
+      {
+        q: "What problem do generics solve?",
+        a_en: "Generics let a function/type stay type-safe across whatever specific type it's actually used with, instead of duplicating the function per type or giving up with any (losing all safety). A generic <T> captures 'whatever comes in, that same type comes out,' checked consistently at every call site.",
+        a_hi: "Generics ek function/type ko type-safe rakhte hain chahe wo kisi bhi type ke saath use ho, bina function duplicate kiye ya any use karke safety khoye. <T> capture karta hai 'jo andar aaya, wahi bahar jaayega', har call site pe checked.",
+        code: `function first<T>(arr: T[]): T | undefined { return arr[0]; }
+first([1, 2, 3]);      // inferred: number | undefined
+first(['a', 'b']);     // inferred: string | undefined — same function`
+      },
+      {
+        q: "What do Partial, Pick, Omit, and Record do?",
+        a_en: "Built-in utility types that derive a new type from an existing one, staying in sync automatically. Partial<T> makes every property optional. Pick<T,K> keeps only named keys. Omit<T,K> keeps everything except named keys. Record<K,V> builds an object type mapping every key in K to type V.",
+        a_hi: "Built-in utility types jo existing type se naya type derive karte hain, automatically sync rehte hain. Partial<T> sab optional. Pick<T,K> sirf named keys. Omit<T,K> named keys chhod kar baaki sab. Record<K,V> K ki har key ko V se map karta object.",
+        code: `interface User { id: string; name: string; email: string; }
+type UserUpdate = Partial<Omit<User, 'id'>>; // { name?: string; email?: string }
+type Roles = Record<'admin' | 'editor' | 'viewer', string[]>;`
+      },
+      {
+        q: "What are discriminated unions?",
+        a_en: "A union of object types sharing one common literal-typed field (the discriminant, often 'type' or 'status'). Narrowing on that field with if/switch automatically narrows the whole object's type in that branch — the standard type-safe way to model loading/success/error API states without one variant's fields leaking into another.",
+        a_hi: "Object types ka union jo ek common literal field share karte hain (discriminant, 'type'/'status'). Us field pe if/switch se narrow karne se poora object us branch mein narrow ho jaata hai — loading/success/error states model karne ka safe tareeka.",
+        code: `type Result =
+  | { status: 'loading' }
+  | { status: 'success'; data: string }
+  | { status: 'error'; message: string };
+
+function handle(r: Result) {
+  if (r.status === 'success') console.log(r.data); // r.data exists ONLY here
+}`
+      },
+      {
+        q: "unknown vs any — what's the real difference?",
+        a_en: "any disables type checking entirely — call anything, access anything, zero compiler complaints, silently reintroducing runtime errors TypeScript exists to prevent. unknown accepts any value too, but forces you to narrow it (typeof, instanceof, a type guard) before doing anything with it — the correct default for a catch block's error or raw JSON.",
+        a_hi: "any type checking poori tarah disable kar deta hai — kuch bhi call/access karo, koi complaint nahi, runtime errors wapas aa jaate hain. unknown bhi koi value accept karta hai, par kuch karne se pehle narrow karna padta hai — catch error ya raw JSON ke liye sahi default.",
+        code: `function handle(err: unknown) {
+  if (err instanceof Error) console.log(err.message); // safe, narrowed
+  // err.message; // Error — must narrow first
+}`
+      },
+      {
+        q: "What does the satisfies operator do?",
+        a_en: "satisfies checks a value matches a type without widening the value's own inferred type. Annotating const x: Config = {...} widens literals to their general type; x = {...} satisfies Config keeps the narrow, precise inferred type while still validating the shape — best of both compile-time safety and precise autocomplete.",
+        a_hi: "satisfies value ko type ke against check karta hai bina value ka apna inferred type widen kiye. const x: Config annotation literals ko general type mein widen kar deta hai; satisfies narrow type rakhta hai aur shape bhi validate karta hai.",
+        code: `const theme = { mode: 'dark', accent: '#4f46e5' } satisfies Record<string, string>;
+theme.mode; // type is the literal 'dark', not widened to string`
+      },
+      {
+        q: "What is the never type used for?",
+        a_en: "never represents a value that can genuinely never occur — a function that always throws has return type never, not void. Its most useful role: exhaustiveness checking — in a switch over a discriminated union, assigning the unhandled value to a never-typed parameter in default makes the compiler error if a new variant is ever added without a matching case.",
+        a_hi: "never ek aisi value hai jo kabhi occur nahi hoti — hamesha throw karne wale function ka return type never hota hai, void nahi. Sabse useful role: exhaustiveness check — switch ke default case mein never assign karne se compiler naya variant miss hone pe error dega.",
+        code: `function assertNever(x: never): never { throw new Error('Unhandled: ' + x); }
+switch (shape.kind) {
+  case 'circle': return Math.PI * shape.r ** 2;
+  case 'square': return shape.side ** 2;
+  default: return assertNever(shape.kind); // compile error if a variant is missed
+}`
+      },
+      {
+        q: "interface vs type — what actually differs?",
+        a_en: "Both describe object shapes and are largely interchangeable for that case, but interface supports declaration merging — the same name declared twice merges automatically, useful for extending third-party types. type is strictly more flexible: unions, intersections, mapped/conditional types, and primitive/tuple aliases, none of which interface can express.",
+        a_hi: "Dono object shapes describe karte hain aur largely interchangeable hain, par interface declaration merging support karta hai — same name do baar declare karne se merge ho jaata hai. type zyaada flexible hai: unions, intersections, mapped/conditional types.",
+        code: `interface User { name: string }
+interface User { age: number } // merges automatically
+
+type Status = 'active' | 'inactive'; // union — interface can't express this`
+      },
+      {
+        q: "How does type inference work, and when do you still need explicit annotations?",
+        a_en: "TypeScript infers types from initial values, return statements, and context (contextual typing for callback parameters) without you writing them out. Explicit annotations are still needed for function parameters (no call-site context to infer from), empty array/object literals that would otherwise infer as any[], and public API boundaries where the intended type should be locked in, not guessed.",
+        a_hi: "TypeScript initial values, return statements, aur context se types infer kar leta hai bina explicitly likhe. Explicit annotations zaroori hain: function parameters (koi context nahi), empty array/object jo any[] infer honge, aur public API boundaries jahan intended type lock karna hai.",
+        code: `let count = 5; // inferred: number
+function add(a: number, b: number) { return a + b; } // params need annotation
+const items: string[] = []; // without annotation, infers as any[]`
+      },
+    ],
+  },
+
+  {
+    id: "browser-storage", label: "Storage & Auth", icon: "🔐", color: "#FB7185", section: "Browser",
+    def_en: "The browser gives frontend code several storage and networking primitives — each with different lifetimes, sizes, and security implications — plus the auth/security model that governs how a page can safely talk to a server.",
+    def_hi: "Browser frontend code ko kayi storage aur networking primitives deta hai — alag lifetimes, sizes, aur security implications ke saath — plus wo auth/security model jo control karta hai page server se safely kaise baat kare.",
+    questions: [
+      {
+        q: "localStorage vs sessionStorage vs cookies vs IndexedDB — how do you pick?",
+        a_en: "Cookies are tiny (~4KB) but sent automatically with every matching request — the right place for a session token the server must see every time. localStorage (5-10MB) persists indefinitely, client-only, good for simple preferences. sessionStorage is the same API but cleared when the tab closes. IndexedDB (100s of MB) is a real structured, transactional database for large or queryable data.",
+        a_hi: "Cookies chhote hain (~4KB) par har matching request ke saath automatically bhejte hain — session token ke liye sahi jo server ko har baar dikhna chahiye. localStorage (5-10MB) hamesha persist karta hai, client-only. sessionStorage same API par tab close pe clear. IndexedDB (100s MB) real structured database hai.",
+        code: `localStorage.setItem('theme', 'dark');       // persists, all tabs
+sessionStorage.setItem('draft', 'text');       // this tab only, cleared on close
+document.cookie = "session=abc; Secure; SameSite=Strict"; // auto-sent to server`
+      },
+      {
+        q: "Where should you store a JWT, and why?",
+        a_en: "localStorage is simple but any XSS on the page can read it and exfiltrate the token trivially. The more secure option is an HttpOnly cookie set by the server — invisible to JavaScript entirely, so even a successful XSS can't steal it directly. This shifts the concern to CSRF, mitigated with SameSite=Strict/Lax plus a CSRF token.",
+        a_hi: "localStorage simple hai par koi bhi XSS token ko read/exfiltrate kar sakta hai. Zyada secure option: server-set HttpOnly cookie — JavaScript ko bilkul nahi dikhta, XSS bhi steal nahi kar sakta. Isse CSRF concern aata hai, SameSite + CSRF token se mitigate karo.",
+        code: `// Less secure — readable by any injected script
+localStorage.setItem('token', jwt);
+
+// More secure — server sets this, JS can never read it
+// Set-Cookie: token=xyz; HttpOnly; Secure; SameSite=Strict`
+      },
+      {
+        q: "What's the difference between Authentication and Authorization?",
+        a_en: "Authentication answers 'who are you?' — verifying identity via credentials, always the first step. Authorization answers 'what are you allowed to do?' — given you know who they are, checking permission for a specific action. A logged-in regular user hitting an admin-only route is a perfect 'authenticated but not authorized' example.",
+        a_hi: "Authentication puchta hai 'tum kaun ho?' — credentials se identity verify, pehla step hamesha. Authorization puchta hai 'tumhe kya karne ki permission hai?' — identity pata hone ke baad specific action check. Logged-in regular user admin route try kare — 'authenticated but not authorized' ka perfect example.",
+        code: `if (!user) return redirect('/login');           // Authentication
+if (user.role !== 'admin') return forbid();      // Authorization`
+      },
+      {
+        q: "REST HTTP methods — what's idempotent and what isn't?",
+        a_en: "GET reads, safe and idempotent. POST creates — not idempotent, calling twice creates two resources. PUT replaces entirely — idempotent, same body repeated gives the same end state. PATCH partially updates. DELETE removes — idempotent, deleting an already-deleted resource just returns 'already gone.'",
+        a_hi: "GET read karta hai, safe aur idempotent. POST create karta hai — idempotent nahi, do baar call se do resources ban jaate hain. PUT poora replace karta hai — idempotent. PATCH partial update. DELETE remove karta hai — idempotent, already-deleted pe bhi ok response.",
+        code: `GET    /users/1  → read (idempotent)
+POST   /users    → create (NOT idempotent — repeats duplicate)
+PUT    /users/1  → replace entirely (idempotent)
+PATCH  /users/1  → partial update
+DELETE /users/1  → remove (idempotent)`
+      },
+      {
+        q: "What is CORS, and who actually enforces it?",
+        a_en: "By default, the browser's Same-Origin Policy blocks JS on one origin from reading a response from a different origin. CORS is the server opting out of that for specific origins via response headers (Access-Control-Allow-Origin). Critically, CORS is enforced entirely by the browser — a CORS error can only be fixed on the server, never worked around client-side.",
+        a_hi: "Default mein, browser ki Same-Origin Policy alag origin ke response ko read karne se rokti hai. CORS server ka specific origins ke liye opt-out hai (Access-Control-Allow-Origin header). CORS enforcement poori tarah browser karta hai — fix sirf server pe hota hai, client se kabhi nahi.",
+        code: `// Server response header — grants permission
+// Access-Control-Allow-Origin: https://myapp.com
+
+// A CORS error in the console means the SERVER needs this header,
+// not something the requesting frontend code can bypass at all.`
+      },
+      {
+        q: "What is XSS, and what's the primary defense?",
+        a_en: "XSS is malicious JS executing inside your page in another user's browser, with the same trust as your own code — able to read cookies and make authenticated requests silently. The usual vector is rendering unsanitized user input as real HTML. React's default JSX rendering auto-escapes text, which is why apps stay resistant until dangerouslySetInnerHTML opts out of it.",
+        a_hi: "XSS matlab malicious JS kisi aur user ke browser mein tumhare page ke andar chal raha hai, tumhare code jitna trust ke saath — cookies read kar sakta hai, authenticated requests bhej sakta hai. Usual vector: unsanitized user input ko real HTML ki tarah render karna. React ka JSX default text escape karta hai, dangerouslySetInnerHTML se hi ye protection hatti hai.",
+        code: `// Safe by default — React escapes text automatically
+<div>{userComment}</div>
+
+// Dangerous — opts OUT of escaping
+<div dangerouslySetInnerHTML={{ __html: userComment }} />`
+      },
+      {
+        q: "What is CSRF, and how does SameSite defend against it?",
+        a_en: "CSRF exploits cookies being auto-attached to any request to that domain, regardless of which site triggered it — a hidden form on a malicious page can silently fire an authenticated request using the victim's real session cookie. SameSite=Strict/Lax tells the browser to withhold that cookie for cross-site requests, closing the exact mechanism CSRF depends on.",
+        a_hi: "CSRF is baat ka fayda uthata hai ki cookies har request ke saath auto-attach hoti hain, chahe request kahin se bhi trigger hui ho — malicious page pe hidden form victim ki real session cookie use kar leta hai. SameSite=Strict/Lax cross-site requests ke liye cookie rok deta hai — CSRF ka rasta band.",
+        code: `// Set-Cookie: session=abc; SameSite=Strict
+// Browser now withholds this cookie on any cross-site request`
+      },
+      {
+        q: "How do you handle a 401 response globally, without repeating logic at every call site?",
+        a_en: "A response interceptor (Axios or a fetch wrapper) is the standard pattern — one centralized place catches every 401, clears the now-invalid stored credentials, and redirects to login, rather than duplicating that check across dozens of API call sites and inevitably missing some.",
+        a_hi: "Response interceptor (Axios ya fetch wrapper) standard pattern hai — ek centralized jagah har 401 catch karti hai, invalid credentials clear karti hai, login pe redirect karti hai — har API call site pe alag se check karne ki zaroorat nahi.",
+        code: `axios.interceptors.response.use(res => res, error => {
+  if (error.response?.status === 401) {
+    localStorage.removeItem('token');
+    window.location.href = '/login';
+  }
+  return Promise.reject(error);
+});`
+      },
+      {
+        q: "What is Subresource Integrity (SRI), and what does it protect against?",
+        a_en: "SRI pins a cryptographic hash of an externally-hosted script/stylesheet in the tag that loads it — the browser hashes whatever it actually downloads and refuses to execute it on a mismatch. This protects against a compromised CDN silently serving altered, malicious code in place of the library you intended.",
+        a_hi: "SRI ek externally-hosted script/stylesheet ka cryptographic hash tag mein pin karta hai — browser jo bhi download karta hai uska hash check karta hai, mismatch pe execute nahi karta. Ye compromised CDN se altered malicious code serve hone se bachata hai.",
+        code: `<script src="https://cdn.example.com/lib.js"
+  integrity="sha384-oqVuAf..." crossorigin="anonymous"></script>`
+      },
+      {
+        q: "What is clickjacking, and how does frame-ancestors defend against it?",
+        a_en: "Clickjacking embeds your site in an invisible iframe layered under an attacker's decoy UI, so a click that looks like it hits their button actually hits yours underneath. Content-Security-Policy: frame-ancestors 'none' tells the browser to refuse rendering your page inside anyone's iframe, closing the attack entirely.",
+        a_hi: "Clickjacking tumhare site ko invisible iframe mein embed karta hai attacker ki fake UI ke neeche — click dikhta unke button pe hai par actually tumhare button pe lagta hai. CSP: frame-ancestors 'none' browser ko batata hai ki page kisi ke bhi iframe mein render mat karo.",
+        code: `// Response header — blocks any framing at all
+// Content-Security-Policy: frame-ancestors 'none'`
+      },
+      {
+        q: "postMessage — what's it for, and what's the security footgun?",
+        a_en: "window.postMessage() lets two different-origin windows/iframes communicate, which the Same-Origin Policy would otherwise block. The footgun is the target-origin argument — postMessage(data, '*') sends to whatever origin currently occupies that window. Always pass the exact expected origin, and verify event.origin on receipt before trusting event.data.",
+        a_hi: "window.postMessage() do alag-origin windows/iframes ko communicate karne deta hai. Footgun target-origin argument hai — postMessage(data, '*') jo bhi origin currently hai usko bhej deta hai. Hamesha exact origin pass karo, aur receive pe event.origin verify karo.",
+        code: `// Sending — always specify the exact target origin
+otherWindow.postMessage(data, 'https://trusted-app.com');
+
+// Receiving — always verify the sender
+window.addEventListener('message', (event) => {
+  if (event.origin !== 'https://trusted-app.com') return;
+  console.log(event.data);
+});`
+      },
+    ],
+  },
+
+  {
+    id: "perf-vitals", label: "Web Vitals & Rendering", icon: "🚀", color: "#34D399", section: "Performance",
+    def_en: "Performance work splits into loading speed (Core Web Vitals), the browser's rendering pipeline (reflow/repaint), and network-layer wins (caching, compression, CDNs) — each measured and optimized differently.",
+    def_hi: "Performance ka kaam teen hisson mein baant sakte hain: loading speed (Core Web Vitals), browser ki rendering pipeline (reflow/repaint), aur network-layer wins (caching, compression, CDNs) — har ek alag tareeke se measure aur optimize hota hai.",
+    questions: [
+      {
+        q: "What are the Core Web Vitals (LCP, INP, CLS)?",
+        a_en: "LCP (Largest Contentful Paint) measures loading — render time of the biggest visible element. INP (Interaction to Next Paint) measures responsiveness — delay between an interaction and the visual update. CLS (Cumulative Layout Shift) measures visual stability — how much content unexpectedly shifts. All three are also direct Google ranking signals.",
+        a_hi: "LCP (Largest Contentful Paint) loading measure karta hai — sabse bade visible element ka render time. INP (Interaction to Next Paint) responsiveness — interaction aur visual update ke beech delay. CLS (Cumulative Layout Shift) visual stability — content kitna unexpectedly shift hota hai. Teeno Google ranking signals bhi hain.",
+      },
+      {
+        q: "What's the difference between reflow (layout) and repaint?",
+        a_en: "Reflow triggers whenever a change could affect element geometry (width, height, adding/removing a node) — expensive because it can cascade to every element after it. Repaint triggers on visual-only changes (color, visibility) — cheaper, no geometry recalculation. Prefer animating transform/opacity, which can skip both and run on the GPU compositor.",
+        a_hi: "Reflow tab trigger hota hai jab geometry change ho (width, height, node add/remove) — expensive kyunki cascade ho sakta hai. Repaint sirf visual change pe (color, visibility) — cheaper, geometry recalculate nahi hoti. transform/opacity animate karo, GPU compositor pe chal sakte hain, dono skip ho sakte hain.",
+        code: `// Triggers reflow — expensive, animates layout every frame
+el.style.left = pos + 'px';
+
+// GPU-composited — skips reflow AND repaint
+el.style.transform = \`translateX(\${pos}px)\`;`
+      },
+      {
+        q: "Walk through the Critical Rendering Path.",
+        a_en: "HTML parsing builds the DOM. CSS parsing builds the CSSOM — render-blocking by default to avoid a flash of unstyled content. DOM+CSSOM combine into the Render Tree (excluding display:none nodes). Layout calculates every element's size/position. Paint draws pixels. Optimizing means minimizing what blocks the first three steps.",
+        a_hi: "HTML parsing DOM banata hai. CSS parsing CSSOM banata hai — default render-blocking, unstyled content ka flash na dikhe isliye. DOM+CSSOM milkar Render Tree banate hain. Layout har element ka size/position calculate karta hai. Paint pixels draw karta hai. Optimize karna matlab pehle 3 steps ko block hone se rokna.",
+      },
+      {
+        q: "preload vs prefetch vs preconnect vs dns-prefetch — different tools for what?",
+        a_en: "preload fetches something THIS page definitely needs, at high priority, right now (a critical font). prefetch fetches something the NEXT page will probably need, at low priority during idle time. preconnect does the DNS+TCP+TLS handshake for a third-party origin ahead of the real request. dns-prefetch is the lightest — just the DNS lookup alone.",
+        a_hi: "preload us cheez ko fetch karta hai jo IS page ko abhi chahiye, high priority. prefetch NEXT page ke liye, low priority, idle time mein. preconnect kisi third-party origin ke liye DNS+TCP+TLS pehle se kar deta hai. dns-prefetch sabse halka — sirf DNS lookup.",
+        code: `<link rel="preload" href="/fonts/main.woff2" as="font" crossorigin>
+<link rel="prefetch" href="/next-page-chunk.js">
+<link rel="preconnect" href="https://api.example.com">
+<link rel="dns-prefetch" href="https://analytics.example.com">`
+      },
+      {
+        q: "What is the back/forward cache (bfcache), and what breaks it?",
+        a_en: "The bfcache freezes an entire page — JS state, DOM, scroll position — in memory on navigation-away, so back/forward restores it instantly with zero re-fetch. An unload event listener, a dangling WebSocket/IndexedDB transaction, or certain Cache-Control: no-store headers all disable it — Chrome DevTools' bfcache panel flags the culprit.",
+        a_hi: "bfcache poore page ko freeze karta hai memory mein — JS state, DOM, scroll — navigate away pe, isliye back/forward instant restore hota hai. unload listener, dangling WebSocket, ya certain no-store headers ise disable kar dete hain — DevTools bfcache panel batata hai culprit.",
+      },
+      {
+        q: "How do HTTP caching and a CDN each improve performance, and how do they differ?",
+        a_en: "HTTP caching (Cache-Control, ETag) lets the browser reuse a previously-downloaded resource without a new request at all. A CDN distributes copies of static assets across many geographic edge locations, so the request is served from somewhere physically close — cutting network latency, which matters even before caching/compression enter the picture.",
+        a_hi: "HTTP caching (Cache-Control, ETag) browser ko pehle se download resource dobara use karne deta hai, naya request bina. CDN static assets ko kayi geographic locations pe distribute karta hai, isliye request physically nazdeek se serve hota hai — latency kam, caching/compression se pehle hi matter karta hai.",
+        code: `// Cache-Control: max-age=31536000, immutable  → never re-fetch a versioned asset
+// Cache-Control: no-cache                       → always revalidate via ETag first`
+      },
+      {
+        q: "What is code splitting, and how does React.lazy + Suspense implement it?",
+        a_en: "By default a bundler ships one large JS file, so every user downloads code for routes they'll never visit. Code splitting breaks it into chunks loaded on demand — React.lazy(() => import('./Page')) wraps a dynamic import, and Suspense shows a fallback while that chunk downloads, only swapping in the real component once it's ready.",
+        a_hi: "Default mein bundler ek bada JS file bhejta hai, har user un routes ka code bhi download karta hai jo wo kabhi visit nahi karega. Code splitting on-demand chunks mein todta hai — React.lazy dynamic import wrap karta hai, Suspense fallback dikhata hai jab tak chunk download nahi hota.",
+        code: `const Settings = React.lazy(() => import('./Settings'));
+
+<Suspense fallback={<Spinner />}>
+  <Settings />
+</Suspense>`
+      },
+      {
+        q: "What does a Service Worker enable for performance beyond offline support?",
+        a_en: "A Service Worker runs on a separate thread and can intercept every network request, deciding whether to serve from cache, network, or a combination. Beyond offline capability, it enables prefetching resources ahead of when they're requested and serving previously-cached responses instantly on repeat visits — 'instant, from cache' beats waiting on the network every time it applies.",
+        a_hi: "Service Worker separate thread pe chalta hai aur har network request intercept kar sakta hai — cache se serve kare ya network se. Offline ke alawa, resources prefetch kar sakta hai aur repeat visits pe instantly cache se serve kar sakta hai — network se hamesha fast.",
+      },
+      {
+        q: "How do you optimize image loading for LCP?",
+        a_en: "Lazy-load offscreen images (loading=\"lazy\") so they don't compete with the visible ones on initial load. Use srcset to serve appropriately-sized images per device instead of one oversized image scaled down via CSS. Use modern formats (WebP/AVIF), and reserve explicit dimensions or aspect-ratio so layout doesn't shift once the image loads.",
+        a_hi: "Offscreen images lazy-load karo (loading=\"lazy\") taaki visible images se bandwidth compete na ho. srcset se device ke hisaab se sahi size ki image do. Modern formats (WebP/AVIF) use karo, aur explicit dimensions/aspect-ratio reserve karo taaki layout shift na ho.",
+        code: `<img src="photo.webp" loading="lazy"
+     srcset="photo-480.webp 480w, photo-800.webp 800w"
+     style="aspect-ratio: 16/9" />`
+      },
+    ],
+  },
+
+  {
+    id: "git-workflow", label: "Git Internals", icon: "🌿", color: "#F05033", section: "Tools",
+    def_en: "Git is a distributed version control system — every clone holds the full project history. The commands that matter for day-to-day work are the ones that shape shared history safely: merge vs rebase, reset vs revert, and how to recover from a mistake.",
+    def_hi: "Git ek distributed version control system hai — har clone ki poori project history hoti hai. Din-pratidin ke liye important commands wo hain jo shared history safely shape karte hain: merge vs rebase, reset vs revert, aur mistake se kaise recover karein.",
+    questions: [
+      {
+        q: "git merge vs git rebase — what's the actual tradeoff?",
+        a_en: "merge creates a new commit with two parents, preserving the honest record of how branches diverged and reunited — always safe, even on shared branches, since it never rewrites existing commits. rebase replays your commits on top of the target branch, producing clean linear history but rewriting commit hashes — safe only on your own local, not-yet-shared branches.",
+        a_hi: "merge ek naya commit banata hai do parents ke saath, honest record rakhta hai — shared branches pe bhi safe, kyunki existing commits rewrite nahi hote. rebase tumhare commits ko target branch ke upar replay karta hai — clean history par hashes rewrite hote hain, sirf apni local unshared branch pe safe.",
+        code: `git checkout feature
+git rebase main        # clean history, but rewrites hashes — local branch only
+
+git checkout main
+git merge feature       # safe on shared branches, adds a merge commit`
+      },
+      {
+        q: "git reset vs git revert — when is each safe?",
+        a_en: "reset moves the branch pointer and rewrites history (--soft keeps changes staged, --hard discards them entirely) — dangerous on any branch others have already pulled. revert creates a brand-new commit that undoes a previous one, leaving history fully intact and honest — the only one of the two considered safe on shared/public branches.",
+        a_hi: "reset branch pointer move karta hai aur history rewrite karti hai (--soft changes staged rakhta, --hard discard) — shared branch pe dangerous. revert ek naya commit banata hai jo purana undo karta hai, history intact rehti hai — shared branches pe safe hai.",
+        code: `git reset --hard HEAD~1   // discards the last commit entirely — local only
+git revert HEAD           // new commit that undoes the last one — safe to share`
+      },
+      {
+        q: "What is git bisect, and when would you use it?",
+        a_en: "git bisect automates finding the exact commit that introduced a bug via binary search — mark a known-good and known-bad commit, and Git checks out the midpoint repeatedly, narrowing an even huge commit range to the culprit in roughly log2(n) steps instead of manually checking each one.",
+        a_hi: "git bisect binary search se exact commit dhoondta hai jisne bug introduce kiya — ek good aur ek bad commit mark karo, Git midpoint check karta jaata hai, log2(n) steps mein hi culprit mil jaata hai.",
+        code: `git bisect start
+git bisect bad                # current commit is broken
+git bisect good v1.2.0        # this old tag was fine
+# Git checks out the midpoint — mark each as good/bad until found
+git bisect run npm test       # or fully automate it`
+      },
+      {
+        q: "What does interactive rebase (git rebase -i) let you do?",
+        a_en: "It opens an editable list of recent commits, letting you squash several small commits into one clean commit, reword a message, reorder commits, or drop one entirely — a tool for cleaning up your own local, not-yet-pushed history before opening a PR, never for commits others have already pulled.",
+        a_hi: "Recent commits ki editable list khulti hai — chhote commits ko squash karo ek clean commit mein, message reword karo, reorder ya drop karo — apni local unshared history clean karne ke liye, others ke pulled commits ke liye kabhi nahi.",
+        code: `git rebase -i HEAD~4
+# pick, squash, reword, drop — edit the list, save, done`
+      },
+      {
+        q: "What is git stash, and when is it useful?",
+        a_en: "git stash temporarily shelves uncommitted changes (staged and unstaged), restoring a clean working directory — useful when you need to switch branches mid-task without a half-finished throwaway commit. git stash pop restores exactly where you left off.",
+        a_hi: "git stash uncommitted changes ko temporarily shelve karta hai, clean working directory restore karta hai — jab beech mein branch switch karna ho bina half-finished commit ke. git stash pop wahin wapas le aata hai.",
+        code: `git stash          // shelve current changes
+git checkout hotfix
+# ... fix urgent bug ...
+git checkout feature
+git stash pop       // restore exactly where you left off`
+      },
+      {
+        q: "What is the reflog, and when does it save you?",
+        a_en: "The reflog is Git's local log of every place HEAD has pointed — every commit, checkout, reset, rebase. After a git reset --hard that discarded commits, git reflog still shows the hash they were at, so git reset --hard <hash> brings them right back — commits are essentially never truly gone until garbage collection eventually runs.",
+        a_hi: "Reflog Git ka local log hai — HEAD kahan-kahan point kar chuka hai. git reset --hard ke baad bhi reflog purani commits ka hash dikhata hai, git reset --hard <hash> se wapas mil jaate hain — commits genuinely kabhi lost nahi hote turant.",
+        code: `git reflog                    // shows every past HEAD position
+git reset --hard HEAD@{2}      // recover from an "accidental" reset`
+      },
+      {
+        q: "What is a Pull Request, and why does it matter more than the merge itself?",
+        a_en: "A PR is a formal request to merge one branch into another, but its real value is the structured code-review checkpoint — teammates view the exact diff, comment line-by-line, request changes, and automated CI checks (lint, tests, build) must pass before merging, gatekeeping both human and automated quality.",
+        a_hi: "PR ek formal request hai branch merge karne ki, par asli value structured code review hai — teammates diff dekhte hain, line-by-line comment karte hain, changes request karte hain, CI checks pass hona zaroori hai merge se pehle.",
+      },
+      {
+        q: "What is .gitignore for, and why is it your first line of defense against leaked secrets?",
+        a_en: ".gitignore lists patterns Git should never track, even if the files exist locally — keeping regenerable files (node_modules) out of version control, and critically keeping secrets (.env) out entirely. Anything ever committed is hard to fully remove from history afterward, which is why prevention via .gitignore matters more than cleanup.",
+        a_hi: ".gitignore un patterns ko list karta hai jo Git kabhi track na kare — regenerable files (node_modules) aur critically secrets (.env) bahar rakhta hai. Ek baar commit hone ke baad history se hatana mushkil hai, isliye prevention zaroori hai.",
+        code: `node_modules/
+.env
+.env.local
+dist/
+*.log`
+      },
+      {
+        q: "What is a Git hook, and what's a practical use for a pre-commit hook?",
+        a_en: "A Git hook is a script Git runs automatically at a specific point (living in .git/hooks/, though Husky makes team-wide sharing practical). A pre-commit hook running a linter/formatter rejects a commit that fails checks — enforcing code quality locally, before code even reaches a PR/CI pipeline.",
+        a_hi: "Git hook ek script hai jo Git automatically ek specific point pe run karta hai (.git/hooks/ mein, Husky se team-wide share hota hai). pre-commit hook linter/formatter chala kar failing commit reject kar deta hai — code quality PR se pehle hi enforce.",
+      },
+    ],
+  },
+
+  {
+    id: "dev-tools", label: "DevTools & Testing", icon: "🛠", color: "#F97316", section: "Tools",
+    def_en: "Knowing which tool answers which question — a re-render problem vs a load-time problem vs a bundle-size problem — is what separates guessing from actually diagnosing a real performance or quality issue.",
+    def_hi: "Kaunsa tool kaunsa sawaal answer karta hai — re-render problem vs load-time problem vs bundle-size problem — yehi guessing aur real diagnosis ke beech farq karta hai.",
+    questions: [
+      {
+        q: "When do you reach for the React DevTools Profiler vs Lighthouse?",
+        a_en: "The Profiler records which components re-rendered, how often, and why — the right tool when you suspect a re-render problem (a page feels sluggish while interacting, but Lighthouse reports fine load scores). Lighthouse audits broad, pre-launch page-load health (Performance, Accessibility, SEO) with standardized, stakeholder-friendly scores.",
+        a_hi: "Profiler batata hai kaunsa component kitni baar re-render hua aur kyun — jab interaction ke waqt sluggish lage par Lighthouse load score theek de. Lighthouse broad, pre-launch page-load health audit karta hai (Performance, A11y, SEO) standardized scores ke saath.",
+      },
+      {
+        q: "When do you use the Chrome DevTools Performance tab vs the Network tab?",
+        a_en: "The Performance tab records a low-level flame-chart timeline of everything the main thread did — the right tool for finding what's blocking the thread at a precise moment (janky scrolling). The Network tab shows a waterfall of every request — the natural first stop when load time itself, not runtime interaction, is the suspected problem.",
+        a_hi: "Performance tab flame-chart timeline record karta hai main thread ki activity ki — janky scrolling jaise problems ke liye. Network tab har request ka waterfall dikhata hai — load time problem ho (runtime interaction nahi) toh yahi first stop.",
+      },
+      {
+        q: "What does a bundle analyzer show you, and when is it the right tool?",
+        a_en: "webpack-bundle-analyzer visualizes the production bundle as a size-proportional treemap, showing exactly which dependencies contribute how many bytes — the right tool specifically for bundle-size problems (slow download/parse), distinct from runtime performance which the Profiler covers instead.",
+        a_hi: "webpack-bundle-analyzer production bundle ko size-proportional treemap dikhata hai — kaunsi dependency kitne bytes contribute kar rahi hai. Bundle-size problems ke liye sahi tool, runtime performance ke liye nahi (wo Profiler ka kaam hai).",
+      },
+      {
+        q: "How do you use Chrome DevTools' Memory panel to confirm a leak?",
+        a_en: "Take a heap snapshot, perform the suspected-leaking action several times (mount/unmount a component), force garbage collection, and take another snapshot — compare what grew. Filtering for 'Detached' DOM nodes (removed from the page but still referenced in JS memory) usually points directly at the retaining reference, often an un-cleaned-up useEffect subscription.",
+        a_hi: "Ek heap snapshot lo, suspected action kayi baar karo (mount/unmount), force GC karo, dobara snapshot lo — compare karo kya grow hua. 'Detached' DOM nodes filter karne se retaining reference milta hai, aksar un-cleaned useEffect subscription.",
+      },
+      {
+        q: "Cypress vs Playwright — how do you decide?",
+        a_en: "Both offer good auto-waiting ergonomics for E2E tests. Cypress runs inside the browser itself, historically Chromium-focused. Playwright runs via the browser's automation protocol from outside, giving first-class Chromium/Firefox/WebKit support plus native multi-tab and cross-origin support in the same test — generally the stronger default for flows spanning multiple origins (OAuth redirects, payment popups).",
+        a_hi: "Dono E2E tests ke liye achhi auto-waiting dete hain. Cypress browser ke andar chalta hai, historically Chromium-focused. Playwright browser ke bahar se automation protocol use karta hai, Chromium/Firefox/WebKit teeno support, multi-tab/cross-origin flows ke liye better default.",
+      },
+      {
+        q: "What is MSW (Mock Service Worker), and why prefer it over jest.mock for API calls?",
+        a_en: "MSW intercepts requests at the network layer — component code calls fetch/Axios normally with zero awareness of mocking. This is more realistic than jest.mock('axios'), which replaces the module and can drift out of sync with the real client's behavior. The same handlers work in the browser during dev and in tests — one shared source of truth.",
+        a_hi: "MSW network layer pe requests intercept karta hai — component code normally fetch/Axios call karta hai, mocking ka pata bhi nahi chalta. jest.mock se zyaada realistic, jo real client se drift ho sakta hai. Same handlers dev aur tests dono mein chalte hain.",
+      },
+      {
+        q: "When would you reach for Storybook?",
+        a_en: "Storybook renders individual components in complete isolation — no routing, no global providers — letting you develop and visually test every prop-driven state (loading, error, empty) independently. It's the right call for a shared component library multiple teams consume, since it doubles as living documentation.",
+        a_hi: "Storybook components ko complete isolation mein render karta hai — koi routing/providers nahi — har prop-driven state (loading, error, empty) independently test ho sakti hai. Shared component library ke liye sahi, kyunki ye living documentation bhi ban jaata hai.",
+      },
+    ],
+  },
+
+  {
+    id: "sys-design", label: "Frontend System Design", icon: "🏛", color: "#EC4899", section: "Design",
+    def_en: "Frontend system design questions test whether you can decompose an ambiguous, large-scale product requirement into concrete architectural decisions — data flow, rendering strategy, and the real tradeoffs each choice makes.",
+    def_hi: "Frontend system design questions test karte hain ki tum ek ambiguous, large-scale product requirement ko concrete architectural decisions mein todh sakte ho ya nahi — data flow, rendering strategy, aur har choice ka real tradeoff.",
+    questions: [
+      {
+        q: "Design a real-time collaborative text editor (like Google Docs). What's the hardest part?",
+        a_en: "The hardest part isn't the UI — it's merging concurrent edits without corruption. Operational Transforms mathematically transform incoming operations against concurrent ones so they apply correctly regardless of order (what Google Docs uses); CRDTs are a newer alternative where the data structure itself always converges. Add WebSockets for sync, optimistic local updates for instant typing feel, and lightweight presence broadcasts for live cursors.",
+        a_hi: "Sabse mushkil hissa UI nahi — concurrent edits ko bina corrupt kiye merge karna hai. Operational Transforms incoming operations ko concurrent operations ke against transform karte hain (Google Docs isi pe hai); CRDTs newer alternative hain jahan data structure khud converge ho jaati hai. WebSockets sync ke liye, optimistic updates instant feel ke liye, presence broadcasts live cursors ke liye.",
+      },
+      {
+        q: "Design a client-side rate limiter for API calls in a SPA.",
+        a_en: "Layer it: debounce/throttle at the trigger level for frequent UI events (search-as-you-type). A token-bucket counter for requests that do fire — tokens refill at a steady rate, requests queue once exhausted. Cap concurrent in-flight requests separately. Finally, handle a server's 429 response with exponential backoff rather than immediately retrying.",
+        a_hi: "Layer karo: trigger level pe debounce/throttle frequent events ke liye. Token-bucket counter jo fire hone waale requests ko control kare — tokens steady rate se refill hote hain. Concurrent in-flight requests alag se cap karo. Server ka 429 aaye toh exponential backoff karo, turant retry nahi.",
+      },
+      {
+        q: "Design infinite scrolling with cursor-based pagination — why not offset-based?",
+        a_en: "Offset pagination (?offset=60) breaks if items are inserted/deleted between requests — offsets shift, causing duplicates or skipped items. Cursor-based pagination uses a stable reference (last item's ID/timestamp) that stays correct regardless of changes elsewhere. Combine with an IntersectionObserver on a bottom sentinel and list virtualization so DOM size stays bounded.",
+        a_hi: "Offset pagination (?offset=60) tab tootta hai jab requests ke beech items insert/delete hon — offsets shift ho jaate hain. Cursor-based pagination stable reference use karta hai (last item ka ID) jo hamesha correct rehta hai. IntersectionObserver + list virtualization se DOM size bounded rehta hai.",
+      },
+      {
+        q: "Design a client-side state management system like Redux Toolkit, from first principles.",
+        a_en: "A central store holding the single source of truth; pure reducer functions computing new state with no side effects; dispatch as the only sanctioned way to trigger change; a subscription system so components re-render only for the slice they read; and middleware hooks intercepting dispatch for cross-cutting async/logging behavior reducers themselves can't have.",
+        a_hi: "Central store jo single source of truth ho; pure reducer functions jo no-side-effect naya state compute karein; dispatch hi state change ka sole tareeka; subscription system jisse components sirf apni slice ke liye re-render hon; middleware hooks jo async/logging cross-cutting behavior handle karein.",
+      },
+      {
+        q: "Design an authentication flow with social login (OAuth) and JWT.",
+        a_en: "User clicks 'Sign in with Google' → redirected to Google's own consent screen (frontend never touches the password). Google redirects back with a temporary auth code → your backend (never frontend, needs a secret key) exchanges it for identity tokens. Your backend issues its own JWT, ideally as an HttpOnly cookie, with a refresh-token mechanism for silent re-authentication.",
+        a_hi: "User 'Sign in with Google' click karta hai → Google ke consent screen pe redirect (frontend password nahi chhuta). Google temporary auth code ke saath wapas redirect karta hai → backend (frontend nahi, secret key chahiye) usse tokens exchange karta hai. Backend apna JWT issue karta hai, HttpOnly cookie mein.",
+      },
+      {
+        q: "How would you design a UI to handle 1,000+ items in a list efficiently?",
+        a_en: "Rendering 1,000+ real DOM nodes is expensive regardless of how optimized each row's render is — the fix is reducing how many nodes exist at once. List virtualization (react-window) renders only visible items plus a small buffer, recycling DOM nodes on scroll. Combine with pagination/infinite scroll at the data layer and React.memo on row components.",
+        a_hi: "1,000+ real DOM nodes render karna expensive hai chahe har row kitna bhi optimized ho — fix hai ek time pe kitne nodes exist karte hain wo kam karna. List virtualization (react-window) sirf visible items render karta hai. Pagination + React.memo bhi combine karo.",
+      },
+      {
+        q: "Design a notification system (in-app + push) for a web app.",
+        a_en: "Three layers: delivery (a WebSocket/SSE for in-app real-time while the tab is open, a Service Worker + Push API for when it's closed), state (a small store tracking read/unread, synced against the server as source of truth with an optimistic mark-as-read), and UI (a badge, a virtualized dropdown, and critically user-configurable per-category preferences persisted server-side).",
+        a_hi: "Teen layers: delivery (WebSocket/SSE tab khula hone pe, Service Worker + Push API tab band hone pe), state (read/unread track karta chhota store, server se sync, optimistic mark-as-read), UI (badge, virtualized dropdown, aur user-configurable preferences server-side saved).",
+      },
+    ],
+  },
 ];
 
 const TOTAL = CATEGORIES.reduce((s, c) => s + c.questions.length, 0);
-const JS_CATS = CATEGORIES.filter(c => c.section === "JavaScript");
-const REACT_CATS = CATEGORIES.filter(c => c.section === "React");
+
+const ALL_QUESTIONS = CATEGORIES.flatMap(c =>
+  c.questions.map((q, i) => ({
+    ...q,
+    catId: c.id,
+    catLabel: c.label,
+    catIcon: c.icon,
+    catColor: c.color,
+    catSection: c.section,
+    qIndexInCat: i,
+  }))
+);
+
+const PAGE_SIZE = 12;
+
+function getPageNumbers(current, total) {
+  if (total <= 1) return [1];
+  const delta = 1;
+  const range = [];
+  for (let i = Math.max(2, current - delta); i <= Math.min(total - 1, current + delta); i++) range.push(i);
+  const pages = [1];
+  if (range[0] > 2) pages.push("…");
+  pages.push(...range);
+  if (range[range.length - 1] < total - 1) pages.push("…");
+  pages.push(total);
+  return pages;
+}
+
+const SECTION_META = {
+  JavaScript: { label: "JS", color: "#F7DF1E" },
+  React: { label: "REACT", color: "#61DAFB" },
+  CSS: { label: "CSS", color: "#2965F1" },
+  TypeScript: { label: "TS", color: "#8B5CF6" },
+  Browser: { label: "WEB & SEC", color: "#FB7185" },
+  Performance: { label: "PERF", color: "#34D399" },
+  Tools: { label: "GIT & TOOLS", color: "#F97316" },
+  Design: { label: "DESIGN", color: "#EC4899" },
+};
+const SECTION_ORDER = ["JavaScript", "React", "CSS", "TypeScript", "Browser", "Performance", "Tools", "Design"];
+const SECTIONS = SECTION_ORDER
+  .map(name => ({ name, ...SECTION_META[name], cats: CATEGORIES.filter(c => c.section === name) }))
+  .filter(s => s.cats.length > 0);
 
 const TabRow = ({ cats, label, labelColor, activeCat, reviewed, switchCat }) => (
   <div style={{ display: "flex", alignItems: "stretch", borderBottom: "1px solid #111120" }}>
     <div style={{
       writingMode: "vertical-rl", textOrientation: "mixed",
-      fontFamily: "monospace", fontSize: 8, letterSpacing: 3,
+      fontFamily: "'Manrope', sans-serif", fontSize: 9, letterSpacing: 3,
       color: labelColor, textTransform: "uppercase",
       padding: "6px 6px 6px 8px",
       borderRight: `1px solid ${labelColor}22`,
       background: `${labelColor}08`,
       display: "flex", alignItems: "center",
     }}>{label}</div>
-    <div style={{ display: "flex", overflowX: "auto", flex: 1 }}>
+    <div className="no-scrollbar" style={{ display: "flex", overflowX: "auto", flex: 1 }}>
       {cats.map(c => {
         const isActive = activeCat === c.id;
         const done = c.questions.filter((_, i) => reviewed[`${c.id}-${i}`]).length;
@@ -5617,16 +6470,16 @@ const TabRow = ({ cats, label, labelColor, activeCat, reviewed, switchCat }) => 
             borderBottom: isActive ? `2px solid ${c.color}` : "2px solid transparent",
             padding: "8px 10px 6px",
             cursor: "pointer", color: isActive ? c.color : "#3a3a5a",
-            fontFamily: "monospace", fontSize: 9, letterSpacing: 1,
+            fontFamily: "'Manrope', sans-serif", fontSize: 10, letterSpacing: 1,
             textTransform: "uppercase", whiteSpace: "nowrap",
             transition: "all 0.2s",
             display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
             marginBottom: -1,
           }}>
-            <span style={{ fontSize: 13 }}>{c.icon}</span>
+            <span style={{ fontSize: 14 }}>{c.icon}</span>
             <span>{c.label}</span>
             <span style={{
-              fontSize: 8,
+              fontSize: 9,
               color: done === c.questions.length && done > 0 ? c.color : "#222240",
             }}>{done}/{c.questions.length}</span>
           </button>
@@ -5637,29 +6490,58 @@ const TabRow = ({ cats, label, labelColor, activeCat, reviewed, switchCat }) => 
 );
 
 export default function App() {
-  const [activeCat, setActiveCat] = useState("js-core");
+  const [activeCat, setActiveCat] = useState(() => loadLastCategory("js-core"));
   const [openIdx, setOpenIdx] = useState(null);
   const [search, setSearch] = useState("");
-  const [reviewed, setReviewed] = useState({});
+  const [reviewed, setReviewed] = useState(loadReviewed);
   const [lang, setLang] = useState("both");
   const [mode, setMode] = useState("theory");
+  const [showAll, setShowAll] = useState(false);
+  const [sectionFilter, setSectionFilter] = useState(null);
+  const [page, setPage] = useState(1);
+  const [openSection, setOpenSection] = useState(null);
 
   const cat = CATEGORIES.find(c => c.id === activeCat);
   const accent = cat.color;
   const reviewedCount = Object.keys(reviewed).length;
+  const progressPct = TOTAL ? Math.round((reviewedCount / TOTAL) * 100) : 0;
+  const isFlatView = showAll || !!sectionFilter;
 
   const filtered = useMemo(() => {
-    if (!search.trim()) return cat.questions;
+    const source = showAll
+      ? ALL_QUESTIONS
+      : sectionFilter
+      ? ALL_QUESTIONS.filter(q => q.catSection === sectionFilter)
+      : cat.questions;
+    if (!search.trim()) return source;
     const q = search.toLowerCase();
-    return cat.questions.filter(item =>
+    return source.filter(item =>
       item.q.toLowerCase().includes(q) ||
       (item.a_en && item.a_en.toLowerCase().includes(q)) ||
       (item.a_hi && item.a_hi.toLowerCase().includes(q)) ||
-      (item.code && item.code.toLowerCase().includes(q))
+      (item.code && item.code.toLowerCase().includes(q)) ||
+      ((showAll || sectionFilter) && item.catLabel.toLowerCase().includes(q))
     );
-  }, [search, cat]);
+  }, [search, cat, showAll, sectionFilter]);
 
-  const switchCat = (id) => { setActiveCat(id); setOpenIdx(null); setSearch(""); };
+  const totalPages = isFlatView ? Math.max(1, Math.ceil(filtered.length / PAGE_SIZE)) : 1;
+  const safePage = Math.min(page, totalPages);
+  const pageItems = isFlatView ? filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE) : filtered;
+
+  const goToPage = (p) => {
+    setPage(Math.max(1, Math.min(totalPages, p)));
+    setOpenIdx(null);
+  };
+
+  useEffect(() => {
+    try { localStorage.setItem(REVIEWED_STORAGE_KEY, JSON.stringify(reviewed)); } catch { /* storage unavailable/full — progress just won't persist */ }
+  }, [reviewed]);
+
+  useEffect(() => {
+    try { localStorage.setItem(LAST_CAT_STORAGE_KEY, activeCat); } catch { /* ignore */ }
+  }, [activeCat]);
+
+  const switchCat = (id) => { setActiveCat(id); setShowAll(false); setSectionFilter(null); setOpenIdx(null); setSearch(""); setPage(1); setOpenSection(null); };
   const toggleReviewed = (key, e) => {
     e.stopPropagation();
     setReviewed(p => { const n = { ...p }; n[key] ? delete n[key] : (n[key] = true); return n; });
@@ -5670,88 +6552,114 @@ export default function App() {
       minHeight: "100vh",
       background: "#07070f",
       color: "#d8d4cc",
-      fontFamily: "Georgia, 'Times New Roman', serif",
+      fontFamily: "'Manrope', sans-serif",
     }}>
       <div style={{
         background: "linear-gradient(180deg, #0c0c1e 0%, #07070f 100%)",
         padding: "28px 24px 22px",
         borderBottom: "1px solid #111120",
       }}>
-        <div style={{ maxWidth: 980, margin: "0 auto" }}>
-          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 14, flexWrap: "wrap" }}>
+        <div style={{ maxWidth: "min(1400px, 96vw)", margin: "0 auto" }}>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
             <div>
-              <div style={{ fontFamily: "monospace", fontSize: 9, letterSpacing: 4, color: accent, textTransform: "uppercase", marginBottom: 8, transition: "color 0.3s" }}>
+              <div style={{ fontFamily: "'Manrope', sans-serif", fontSize: 10, letterSpacing: 4, color: accent, textTransform: "uppercase", marginBottom: 8, transition: "color 0.3s" }}>
                 Interview Prep · Bilingual
               </div>
-              <h1 style={{ margin: 0, fontSize: "clamp(20px, 4vw, 34px)", fontWeight: 400, letterSpacing: "-0.5px", lineHeight: 1.2 }}>
-                JavaScript + React<br />
+              <h1 style={{ margin: 0, fontSize: "clamp(24px, 4.5vw, 40px)", fontWeight: 400, letterSpacing: "-0.5px", lineHeight: 1.2 }}>
+                Frontend Interview Prep<br />
                 <span style={{ color: accent, transition: "color 0.3s" }}>EN + Hinglish</span>
               </h1>
-              <p style={{ margin: "8px 0 0", color: "#444", fontSize: 12, lineHeight: 1.6 }}>
+              <p style={{ margin: "8px 0 0", color: "#444", fontSize: 13, lineHeight: 1.6 }}>
                 {TOTAL} questions · {CATEGORIES.length} topics · Code examples
               </p>
             </div>
+          </div>
+
+          <div style={{ marginTop: 18, display: "flex", gap: 14, alignItems: "flex-start", flexWrap: "wrap" }}>
             <div style={{
               background: "#0c0c1a", border: "1px solid #1a1a2e", borderRadius: 12,
               padding: "12px 16px", textAlign: "center", minWidth: 100,
             }}>
-              <div style={{ fontFamily: "monospace", fontSize: 26, fontWeight: 700, color: accent, lineHeight: 1, transition: "color 0.3s" }}>
-                {reviewedCount}
+              <div style={{ display: "flex", alignItems: "baseline", justifyContent: "center", gap: 5, whiteSpace: "nowrap" }}>
+                <span style={{ fontFamily: "'Manrope', sans-serif", fontSize: 28, fontWeight: 700, color: accent, lineHeight: 1, transition: "color 0.3s" }}>
+                  {reviewedCount}
+                </span>
+                <span style={{ fontFamily: "'Manrope', sans-serif", fontSize: 12, color: "#555", letterSpacing: 0.5 }}>
+                  /{TOTAL} done
+                </span>
               </div>
-              <div style={{ fontFamily: "monospace", fontSize: 9, color: "#333", marginTop: 4, letterSpacing: 1 }}>/ {TOTAL} DONE</div>
               <div style={{ marginTop: 6, height: 3, background: "#1a1a30", borderRadius: 99 }}>
-                <div style={{ height: "100%", width: `${(reviewedCount / TOTAL) * 100}%`, background: accent, borderRadius: 99, transition: "width 0.4s, background 0.3s" }} />
+                <div style={{ height: "100%", width: `${progressPct}%`, background: accent, borderRadius: 99, transition: "width 0.4s, background 0.3s" }} />
+              </div>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <div style={{ display: "flex", gap: 4, background: "#0c0c1a", border: "1px solid #1a1a2e", borderRadius: 8, padding: 3, width: "fit-content" }}>
+                {[
+                  { id: "en", label: "🇬🇧 EN" },
+                  { id: "hi", label: "🇮🇳 HI" },
+                  { id: "both", label: "BOTH" },
+                ].map(opt => (
+                  <button key={opt.id} onClick={() => setLang(opt.id)} style={{
+                    background: lang === opt.id ? accent + "22" : "transparent",
+                    border: "none", borderRadius: 6, padding: "6px 14px",
+                    color: lang === opt.id ? accent : "#555",
+                    fontFamily: "'Manrope', sans-serif", fontSize: 11, letterSpacing: 1.5,
+                    cursor: "pointer", transition: "all 0.2s",
+                  }}>
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+
+              <div style={{ display: "flex", gap: 4, background: "#0c0c1a", border: "1px solid #1a1a2e", borderRadius: 8, padding: 3, width: "fit-content" }}>
+                {[
+                  { id: "theory", label: "📚 Theory" },
+                  { id: "coding", label: "💻 Coding" },
+                ].map(opt => (
+                  <button key={opt.id} onClick={() => setMode(opt.id)} style={{
+                    background: mode === opt.id ? accent + "22" : "transparent",
+                    border: "none", borderRadius: 6, padding: "6px 14px",
+                    color: mode === opt.id ? accent : "#555",
+                    fontFamily: "'Manrope', sans-serif", fontSize: 11, letterSpacing: 1.5,
+                    cursor: "pointer", transition: "all 0.2s",
+                  }}>
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div style={{
+              background: "#0c0c1a", border: "1px solid #1a1a2e", borderRadius: 12,
+              padding: "12px 16px", textAlign: "center", minWidth: 100,
+            }}>
+              <div style={{ display: "flex", alignItems: "baseline", justifyContent: "center", gap: 5, whiteSpace: "nowrap" }}>
+                <span style={{ fontFamily: "'Manrope', sans-serif", fontSize: 28, fontWeight: 700, color: accent, lineHeight: 1, transition: "color 0.3s" }}>
+                  {progressPct}%
+                </span>
+                <span style={{ fontFamily: "'Manrope', sans-serif", fontSize: 12, color: "#555", letterSpacing: 0.5 }}>
+                  complete
+                </span>
+              </div>
+              <div style={{ marginTop: 6, height: 3, background: "#1a1a30", borderRadius: 99 }}>
+                <div style={{ height: "100%", width: `${progressPct}%`, background: accent, borderRadius: 99, transition: "width 0.4s, background 0.3s" }} />
               </div>
             </div>
           </div>
 
-          <div style={{ marginTop: 14, display: "flex", gap: 4, background: "#0c0c1a", border: "1px solid #1a1a2e", borderRadius: 8, padding: 3, width: "fit-content" }}>
-            {[
-              { id: "en", label: "🇬🇧 EN" },
-              { id: "hi", label: "🇮🇳 HI" },
-              { id: "both", label: "BOTH" },
-            ].map(opt => (
-              <button key={opt.id} onClick={() => setLang(opt.id)} style={{
-                background: lang === opt.id ? accent + "22" : "transparent",
-                border: "none", borderRadius: 6, padding: "6px 14px",
-                color: lang === opt.id ? accent : "#555",
-                fontFamily: "monospace", fontSize: 10, letterSpacing: 1.5,
-                cursor: "pointer", transition: "all 0.2s",
-              }}>
-                {opt.label}
-              </button>
-            ))}
-          </div>
-
-          <div style={{ marginTop: 14, display: "flex", gap: 4, background: "#0c0c1a", border: "1px solid #1a1a2e", borderRadius: 8, padding: 3, width: "fit-content" }}>
-            {[
-              { id: "theory", label: "📚 Theory" },
-              { id: "coding", label: "💻 Coding" },
-            ].map(opt => (
-              <button key={opt.id} onClick={() => setMode(opt.id)} style={{
-                background: mode === opt.id ? accent + "22" : "transparent",
-                border: "none", borderRadius: 6, padding: "6px 14px",
-                color: mode === opt.id ? accent : "#555",
-                fontFamily: "monospace", fontSize: 10, letterSpacing: 1.5,
-                cursor: "pointer", transition: "all 0.2s",
-              }}>
-                {opt.label}
-              </button>
-            ))}
-          </div>
-
           {mode === "theory" && (
             <div style={{ marginTop: 12, position: "relative", maxWidth: 480 }}>
-              <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#333", fontSize: 13 }}>🔍</span>
+              <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#333", fontSize: 14 }}>🔍</span>
               <input
                 value={search}
-                onChange={e => { setSearch(e.target.value); setOpenIdx(null); }}
-                placeholder={`Search "${cat.label}"...`}
+                onChange={e => { setSearch(e.target.value); setOpenIdx(null); setPage(1); }}
+                placeholder={showAll ? "Search all questions..." : sectionFilter ? `Search "${sectionFilter}"...` : `Search "${cat.label}"...`}
                 style={{
                   width: "100%", boxSizing: "border-box",
                   background: "#0c0c1a", border: "1px solid #1a1a2e",
                   borderRadius: 8, padding: "9px 12px 9px 34px",
-                  color: "#ccc", fontFamily: "monospace", fontSize: 12, outline: "none",
+                  color: "#ccc", fontFamily: "'Manrope', sans-serif", fontSize: 13, outline: "none",
                 }}
               />
             </div>
@@ -5761,31 +6669,124 @@ export default function App() {
 
       {mode === "theory" ? <>
       <div style={{ background: "#07070f", position: "sticky", top: 0, zIndex: 20, borderBottom: "1px solid #111120", padding: "0 24px" }}>
-        <div style={{ maxWidth: 980, margin: "0 auto" }}>
-          <TabRow cats={JS_CATS} label="JS" labelColor="#F7DF1E" activeCat={activeCat} reviewed={reviewed} switchCat={switchCat} />
-          <TabRow cats={REACT_CATS} label="REACT" labelColor="#61DAFB" activeCat={activeCat} reviewed={reviewed} switchCat={switchCat} />
+        <div style={{ maxWidth: "min(1400px, 96vw)", margin: "0 auto" }}>
+          <div className="no-scrollbar" style={{ display: "flex", gap: 6, overflowX: "auto", padding: "10px 0" }}>
+            <button
+              onClick={() => { setShowAll(true); setSectionFilter(null); setOpenSection(null); setOpenIdx(null); setSearch(""); setPage(1); }}
+              style={{
+                display: "flex", alignItems: "center", gap: 6, flexShrink: 0,
+                background: showAll ? `${accent}22` : "#0c0c1a",
+                border: `1px solid ${showAll ? accent + "55" : "#1a1a2e"}`,
+                borderRadius: 20, padding: "6px 12px",
+                color: showAll ? accent : "#666",
+                fontFamily: "'Manrope', sans-serif", fontSize: 11, letterSpacing: 1,
+                cursor: "pointer", whiteSpace: "nowrap", transition: "all 0.2s",
+              }}
+            >
+              📋 ALL
+            </button>
+            {SECTIONS.map(s => {
+              const isOpenSection = openSection === s.name;
+              const isActiveSection = !showAll && (sectionFilter === s.name || (!sectionFilter && cat.section === s.name));
+              return (
+                <button
+                  key={s.name}
+                  onClick={() => {
+                    const changingSection = showAll || sectionFilter !== s.name;
+                    setShowAll(false);
+                    setSectionFilter(s.name);
+                    if (changingSection) {
+                      setOpenIdx(null);
+                      setSearch("");
+                      setPage(1);
+                    }
+                    setOpenSection(o => (o === s.name ? null : s.name));
+                  }}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 6, flexShrink: 0,
+                    background: isOpenSection ? `${s.color}22` : isActiveSection ? `${s.color}12` : "#0c0c1a",
+                    border: `1px solid ${isOpenSection || isActiveSection ? s.color + "55" : "#1a1a2e"}`,
+                    borderRadius: 20, padding: "6px 12px",
+                    color: isOpenSection || isActiveSection ? s.color : "#666",
+                    fontFamily: "'Manrope', sans-serif", fontSize: 11, letterSpacing: 1,
+                    cursor: "pointer", whiteSpace: "nowrap", transition: "all 0.2s",
+                  }}
+                >
+                  {s.label}
+                  <span style={{ display: "inline-block", fontSize: 9, transform: isOpenSection ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}>▾</span>
+                </button>
+              );
+            })}
+          </div>
+          {openSection && (() => {
+            const section = SECTIONS.find(s => s.name === openSection);
+            return (
+              <div style={{ paddingBottom: 4 }}>
+                <TabRow cats={section.cats} label={section.label} labelColor={section.color} activeCat={activeCat} reviewed={reviewed} switchCat={switchCat} />
+              </div>
+            );
+          })()}
         </div>
       </div>
 
-      <div style={{ maxWidth: 980, margin: "0 auto", padding: "22px 24px 80px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-          <span style={{
-            fontFamily: "monospace", fontSize: 8, letterSpacing: 3,
-            padding: "3px 10px", borderRadius: 99, textTransform: "uppercase",
-            background: cat.section === "JavaScript" ? "#F7DF1E12" : "#61DAFB12",
-            color: cat.section === "JavaScript" ? "#F7DF1E" : "#61DAFB",
-            border: `1px solid ${cat.section === "JavaScript" ? "#F7DF1E22" : "#61DAFB22"}`,
-          }}>{cat.section}</span>
-          <span style={{ color: "#222240", fontFamily: "monospace", fontSize: 10 }}>›</span>
-          <span style={{ fontFamily: "monospace", fontSize: 9, color: accent, letterSpacing: 2, textTransform: "uppercase", transition: "color 0.3s" }}>
-            {cat.icon} {cat.label}
-          </span>
-          <span style={{ fontFamily: "monospace", fontSize: 8, color: "#222240", marginLeft: "auto" }}>
-            {cat.questions.length} Q
-          </span>
+      <div style={{ maxWidth: "min(1400px, 96vw)", margin: "0 auto", padding: "22px 24px 80px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
+          {showAll ? (
+            <>
+              <span style={{
+                fontFamily: "'Manrope', sans-serif", fontSize: 9, letterSpacing: 3,
+                padding: "3px 10px", borderRadius: 99, textTransform: "uppercase",
+                background: `${accent}12`, color: accent, border: `1px solid ${accent}22`,
+              }}>All Topics</span>
+              <span style={{ color: "#222240", fontFamily: "'Manrope', sans-serif", fontSize: 11 }}>›</span>
+              <span style={{ fontFamily: "'Manrope', sans-serif", fontSize: 10, color: accent, letterSpacing: 2, textTransform: "uppercase", transition: "color 0.3s" }}>
+                📋 All Questions
+              </span>
+              <span style={{ fontFamily: "'Manrope', sans-serif", fontSize: 9, color: "#222240", marginLeft: "auto" }}>
+                {filtered.length} Q · Page {safePage}/{totalPages}
+              </span>
+            </>
+          ) : sectionFilter ? (
+            <>
+              <span style={{
+                fontFamily: "'Manrope', sans-serif", fontSize: 9, letterSpacing: 3,
+                padding: "3px 10px", borderRadius: 99, textTransform: "uppercase",
+                background: `${(SECTION_META[sectionFilter] || {}).color || accent}12`,
+                color: (SECTION_META[sectionFilter] || {}).color || accent,
+                border: `1px solid ${(SECTION_META[sectionFilter] || {}).color || accent}22`,
+              }}>{sectionFilter}</span>
+              <span style={{ color: "#222240", fontFamily: "'Manrope', sans-serif", fontSize: 11 }}>›</span>
+              <span style={{
+                fontFamily: "'Manrope', sans-serif", fontSize: 10, letterSpacing: 2, textTransform: "uppercase", transition: "color 0.3s",
+                color: (SECTION_META[sectionFilter] || {}).color || accent,
+              }}>
+                📋 All {sectionFilter} Questions
+              </span>
+              <span style={{ fontFamily: "'Manrope', sans-serif", fontSize: 9, color: "#222240", marginLeft: "auto" }}>
+                {filtered.length} Q · Page {safePage}/{totalPages}
+              </span>
+            </>
+          ) : (
+            <>
+              <span style={{
+                fontFamily: "'Manrope', sans-serif", fontSize: 9, letterSpacing: 3,
+                padding: "3px 10px", borderRadius: 99, textTransform: "uppercase",
+                background: `${(SECTION_META[cat.section] || {}).color || accent}12`,
+                color: (SECTION_META[cat.section] || {}).color || accent,
+                border: `1px solid ${(SECTION_META[cat.section] || {}).color || accent}22`,
+              }}>{cat.section}</span>
+              <span style={{ color: "#222240", fontFamily: "'Manrope', sans-serif", fontSize: 11 }}>›</span>
+              <span style={{ fontFamily: "'Manrope', sans-serif", fontSize: 10, color: accent, letterSpacing: 2, textTransform: "uppercase", transition: "color 0.3s" }}>
+                {cat.icon} {cat.label}
+              </span>
+              <span style={{ fontFamily: "'Manrope', sans-serif", fontSize: 9, color: "#222240", marginLeft: "auto" }}>
+                {cat.questions.length} Q
+              </span>
+            </>
+          )}
         </div>
 
-        {!search && (
+        {!isFlatView && !search && (
           <div style={{ marginBottom: 18 }}>
             {(lang === "en" || lang === "both") && cat.def_en && (
               <div style={{
@@ -5794,10 +6795,10 @@ export default function App() {
                 position: "relative", marginBottom: lang === "both" ? 8 : 0,
               }}>
                 <div style={{ position: "absolute", top: 0, left: 0, width: 3, height: "100%", background: accent, borderRadius: "10px 0 0 10px", transition: "background 0.3s" }} />
-                <div style={{ fontFamily: "monospace", fontSize: 7, letterSpacing: 3, color: accent, textTransform: "uppercase", marginBottom: 6, transition: "color 0.3s" }}>
+                <div style={{ fontFamily: "'Manrope', sans-serif", fontSize: 8, letterSpacing: 3, color: accent, textTransform: "uppercase", marginBottom: 6, transition: "color 0.3s" }}>
                   🇬🇧 Definition · English
                 </div>
-                <p style={{ margin: 0, fontSize: 13, lineHeight: 1.75, color: "#9e9a92" }}>
+                <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: "#9e9a92" }}>
                   {cat.def_en}
                 </p>
               </div>
@@ -5809,10 +6810,10 @@ export default function App() {
                 position: "relative",
               }}>
                 <div style={{ position: "absolute", top: 0, left: 0, width: 3, height: "100%", background: accent, borderRadius: "10px 0 0 10px", transition: "background 0.3s" }} />
-                <div style={{ fontFamily: "monospace", fontSize: 7, letterSpacing: 3, color: accent, textTransform: "uppercase", marginBottom: 6, transition: "color 0.3s" }}>
+                <div style={{ fontFamily: "'Manrope', sans-serif", fontSize: 8, letterSpacing: 3, color: accent, textTransform: "uppercase", marginBottom: 6, transition: "color 0.3s" }}>
                   🇮🇳 Definition · Hinglish
                 </div>
-                <p style={{ margin: 0, fontSize: 13, lineHeight: 1.75, color: "#9e9a92" }}>
+                <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: "#9e9a92" }}>
                   {cat.def_hi}
                 </p>
               </div>
@@ -5821,23 +6822,24 @@ export default function App() {
         )}
 
         {filtered.length === 0 && (
-          <div style={{ textAlign: "center", color: "#333", padding: "60px 0", fontFamily: "monospace", fontSize: 13 }}>
+          <div style={{ textAlign: "center", color: "#333", padding: "60px 0", fontFamily: "'Manrope', sans-serif", fontSize: 14 }}>
             No questions match "{search}"
           </div>
         )}
 
         <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-          {filtered.map((item, i) => {
-            const realIdx = cat.questions.indexOf(item);
-            const key = `${activeCat}-${realIdx}`;
+          {pageItems.map((item, i) => {
+            const realIdx = isFlatView ? item.qIndexInCat : cat.questions.indexOf(item);
+            const key = isFlatView ? `${item.catId}-${item.qIndexInCat}` : `${activeCat}-${realIdx}`;
+            const itemAccent = isFlatView ? item.catColor : accent;
             const isOpen = openIdx === i;
             const isDone = !!reviewed[key];
 
             return (
               <div key={key} style={{
-                border: `1px solid ${isOpen ? accent + "55" : isDone ? "#1a2e1a" : "#111120"}`,
+                border: `1px solid ${isOpen ? itemAccent + "55" : isDone ? "#1a2e1a" : "#111120"}`,
                 borderRadius: 10, overflow: "hidden",
-                background: isOpen ? `${accent}07` : isDone ? "#090f09" : "transparent",
+                background: isOpen ? `${itemAccent}07` : isDone ? "#090f09" : "transparent",
                 transition: "all 0.2s",
               }}>
                 <button
@@ -5850,49 +6852,57 @@ export default function App() {
                   }}
                 >
                   <span style={{
-                    fontFamily: "monospace", fontSize: 9, fontWeight: 700,
-                    color: isDone ? "#4CAF50" : isOpen ? accent : "#222240",
+                    fontFamily: "'Manrope', sans-serif", fontSize: 10, fontWeight: 700,
+                    color: isDone ? "#4CAF50" : isOpen ? itemAccent : "#222240",
                     minWidth: 26, transition: "color 0.2s",
                   }}>
                     {isDone ? "✓" : `Q${String(realIdx + 1).padStart(2, "0")}`}
                   </span>
+                  {isFlatView && (
+                    <span style={{
+                      fontFamily: "'Manrope', sans-serif", fontSize: 9, letterSpacing: 1,
+                      padding: "2px 6px", borderRadius: 4, textTransform: "uppercase",
+                      background: `${item.catColor}18`, color: item.catColor,
+                      flexShrink: 0, whiteSpace: "nowrap",
+                    }}>{item.catIcon} {item.catLabel}</span>
+                  )}
                   <span style={{
-                    flex: 1, fontSize: 13.5, lineHeight: 1.5,
+                    flex: 1, fontSize: 15, lineHeight: 1.5,
                     color: isDone ? "#5a8a5a" : isOpen ? "#eee" : "#aaa8a2",
                     transition: "color 0.2s",
                   }}>{item.q}</span>
                   <span style={{
-                    fontSize: 16, color: isOpen ? accent : "#222240",
+                    fontSize: 18, color: isOpen ? itemAccent : "#222240",
                     transform: isOpen ? "rotate(45deg)" : "none",
                     transition: "all 0.2s", flexShrink: 0,
                   }}>+</span>
                 </button>
 
                 {isOpen && (
-                  <div style={{ padding: "0 16px 16px 54px", borderTop: `1px solid ${accent}18` }}>
+                  <div style={{ padding: "0 16px 16px 54px", borderTop: `1px solid ${itemAccent}18` }}>
                     {(lang === "en" || lang === "both") && item.a_en && (
                       <div style={{ marginTop: 14 }}>
-                        <div style={{ fontFamily: "monospace", fontSize: 7, letterSpacing: 3, color: "#666", textTransform: "uppercase", marginBottom: 6 }}>
+                        <div style={{ fontFamily: "'Manrope', sans-serif", fontSize: 8, letterSpacing: 3, color: "#666", textTransform: "uppercase", marginBottom: 6 }}>
                           🇬🇧 English
                         </div>
-                        <p style={{ margin: 0, fontSize: 13, lineHeight: 1.8, color: "#8e8a82" }}>
+                        <p style={{ margin: 0, fontSize: 14, lineHeight: 1.8, color: "#8e8a82" }}>
                           {item.a_en}
                         </p>
                       </div>
                     )}
                     {(lang === "hi" || lang === "both") && item.a_hi && (
                       <div style={{ marginTop: 14 }}>
-                        <div style={{ fontFamily: "monospace", fontSize: 7, letterSpacing: 3, color: "#666", textTransform: "uppercase", marginBottom: 6 }}>
+                        <div style={{ fontFamily: "'Manrope', sans-serif", fontSize: 8, letterSpacing: 3, color: "#666", textTransform: "uppercase", marginBottom: 6 }}>
                           🇮🇳 Hinglish
                         </div>
-                        <p style={{ margin: 0, fontSize: 13, lineHeight: 1.8, color: "#8e8a82" }}>
+                        <p style={{ margin: 0, fontSize: 14, lineHeight: 1.8, color: "#8e8a82" }}>
                           {item.a_hi}
                         </p>
                       </div>
                     )}
                     {item.code && (
                       <div style={{ marginTop: 14 }}>
-                        <div style={{ fontFamily: "monospace", fontSize: 7, letterSpacing: 3, color: "#666", textTransform: "uppercase", marginBottom: 6 }}>
+                        <div style={{ fontFamily: "'Manrope', sans-serif", fontSize: 8, letterSpacing: 3, color: "#666", textTransform: "uppercase", marginBottom: 6 }}>
                           💻 Example
                         </div>
                         <pre style={{
@@ -5901,8 +6911,8 @@ export default function App() {
                           borderRadius: 8,
                           padding: "14px 16px",
                           margin: 0,
-                          fontFamily: "'SF Mono', Menlo, Monaco, Consolas, monospace",
-                          fontSize: 12,
+                          fontFamily: "'Manrope', sans-serif",
+                          fontSize: 13,
                           lineHeight: 1.6,
                           color: "#c9d1d9",
                           overflowX: "auto",
@@ -5920,7 +6930,7 @@ export default function App() {
                         border: `1px solid ${isDone ? "#4CAF5055" : "#1a2a1a"}`,
                         borderRadius: 6, padding: "5px 14px",
                         cursor: "pointer", color: isDone ? "#4CAF50" : "#3a5a3a",
-                        fontSize: 10, fontFamily: "monospace", letterSpacing: 1.5,
+                        fontSize: 11, fontFamily: "'Manrope', sans-serif", letterSpacing: 1.5,
                         transition: "all 0.2s",
                       }}
                     >
@@ -5933,13 +6943,61 @@ export default function App() {
           })}
         </div>
 
+        {isFlatView && filtered.length > 0 && (
+          <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 6, marginTop: 24, flexWrap: "wrap" }}>
+            <button
+              onClick={() => goToPage(safePage - 1)}
+              disabled={safePage === 1}
+              style={{
+                background: "#0c0c1a", border: "1px solid #1a1a2e", borderRadius: 6,
+                padding: "6px 12px", cursor: safePage === 1 ? "not-allowed" : "pointer",
+                color: safePage === 1 ? "#333" : "#999",
+                fontFamily: "'Manrope', sans-serif", fontSize: 11, letterSpacing: 1,
+              }}
+            >
+              ← Prev
+            </button>
+            {getPageNumbers(safePage, totalPages).map((p, idx) =>
+              p === "…" ? (
+                <span key={`e-${idx}`} style={{ color: "#333", fontFamily: "'Manrope', sans-serif", fontSize: 12, padding: "0 4px" }}>…</span>
+              ) : (
+                <button
+                  key={p}
+                  onClick={() => goToPage(p)}
+                  style={{
+                    background: p === safePage ? accent + "22" : "#0c0c1a",
+                    border: `1px solid ${p === safePage ? accent + "55" : "#1a1a2e"}`,
+                    borderRadius: 6, minWidth: 30, padding: "6px 8px",
+                    cursor: "pointer", color: p === safePage ? accent : "#999",
+                    fontFamily: "'Manrope', sans-serif", fontSize: 11, fontWeight: p === safePage ? 700 : 400,
+                  }}
+                >
+                  {p}
+                </button>
+              )
+            )}
+            <button
+              onClick={() => goToPage(safePage + 1)}
+              disabled={safePage === totalPages}
+              style={{
+                background: "#0c0c1a", border: "1px solid #1a1a2e", borderRadius: 6,
+                padding: "6px 12px", cursor: safePage === totalPages ? "not-allowed" : "pointer",
+                color: safePage === totalPages ? "#333" : "#999",
+                fontFamily: "'Manrope', sans-serif", fontSize: 11, letterSpacing: 1,
+              }}
+            >
+              Next →
+            </button>
+          </div>
+        )}
+
         <div style={{
           marginTop: 36, padding: "14px 18px",
           border: "1px dashed #111120", borderRadius: 10,
           display: "flex", gap: 12, alignItems: "flex-start",
         }}>
-          <span style={{ fontSize: 16 }}>💡</span>
-          <p style={{ margin: 0, color: "#444", fontSize: 12, lineHeight: 1.7 }}>
+          <span style={{ fontSize: 18 }}>💡</span>
+          <p style={{ margin: 0, color: "#444", fontSize: 13, lineHeight: 1.7 }}>
             <strong style={{ color: "#666" }}>Tip:</strong>{" "}
             Language toggle top pe — EN, HI, ya BOTH. Code examples browser console mein try karo.
             Note: code mein "from" ki jagah "@" use hua hai parser issues avoid karne ke liye.

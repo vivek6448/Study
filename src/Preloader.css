@@ -1,0 +1,40 @@
+.preloader {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  background: var(--bg);
+}
+
+.preloader-heading {
+  margin: 0;
+  font-family: "Dancing Script", cursive;
+  font-weight: 700;
+  color: var(--text-h);
+  font-size: clamp(20px, 4.4vw, 48px);
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+  text-align: center;
+  white-space: nowrap;
+  max-width: 95vw;
+}
+
+.preloader-count {
+  font-family: var(--heading);
+  font-weight: 600;
+  color: var(--text-h);
+  font-size: clamp(64px, 12vw, 128px);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.preloader-divider {
+  display: block;
+  width: clamp(160px, 20vw, 224px);
+  height: 1px;
+}
