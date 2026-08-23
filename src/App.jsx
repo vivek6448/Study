@@ -1,25 +1,34 @@
 import { useState, useMemo, useEffect } from "react";
 import CodingSection from "./CodingSection";
 
-const REVIEWED_STORAGE_KEY = "frontend-prep-reviewed";
-const LAST_CAT_STORAGE_KEY = "frontend-prep-last-category";
+const STUDY_PROGRESS_KEY = "studyProgress";
 
-function loadReviewed() {
+// Reads + validates the saved progress blob; falls back to defaults on missing/corrupt data.
+function loadStudyProgress() {
   try {
-    const stored = localStorage.getItem(REVIEWED_STORAGE_KEY);
-    return stored ? JSON.parse(stored) : {};
+    const stored = localStorage.getItem(STUDY_PROGRESS_KEY);
+    if (!stored) return { completedTasks: [], lastVisited: null, currentTopic: null };
+    const parsed = JSON.parse(stored);
+    return {
+      completedTasks: Array.isArray(parsed?.completedTasks) ? parsed.completedTasks : [],
+      lastVisited: parsed?.lastVisited ?? null,
+      currentTopic: typeof parsed?.currentTopic === "string" ? parsed.currentTopic : null,
+    };
   } catch {
-    return {};
+    return { completedTasks: [], lastVisited: null, currentTopic: null };
   }
 }
 
+function loadReviewed() {
+  const { completedTasks } = loadStudyProgress();
+  const reviewed = {};
+  completedTasks.forEach(id => { reviewed[id] = true; });
+  return reviewed;
+}
+
 function loadLastCategory(fallback) {
-  try {
-    const stored = localStorage.getItem(LAST_CAT_STORAGE_KEY);
-    return stored && CATEGORIES.some(c => c.id === stored) ? stored : fallback;
-  } catch {
-    return fallback;
-  }
+  const { currentTopic } = loadStudyProgress();
+  return currentTopic && CATEGORIES.some(c => c.id === currentTopic) ? currentTopic : fallback;
 }
 
 const CATEGORIES = [
@@ -6534,12 +6543,14 @@ export default function App() {
   };
 
   useEffect(() => {
-    try { localStorage.setItem(REVIEWED_STORAGE_KEY, JSON.stringify(reviewed)); } catch { /* storage unavailable/full — progress just won't persist */ }
-  }, [reviewed]);
-
-  useEffect(() => {
-    try { localStorage.setItem(LAST_CAT_STORAGE_KEY, activeCat); } catch { /* ignore */ }
-  }, [activeCat]);
+    try {
+      localStorage.setItem(STUDY_PROGRESS_KEY, JSON.stringify({
+        completedTasks: Object.keys(reviewed),
+        lastVisited: Date.now(),
+        currentTopic: activeCat,
+      }));
+    } catch { /* storage unavailable/full — progress just won't persist */ }
+  }, [reviewed, activeCat]);
 
   const switchCat = (id) => { setActiveCat(id); setShowAll(false); setSectionFilter(null); setOpenIdx(null); setSearch(""); setPage(1); setOpenSection(null); };
   const toggleReviewed = (key, e) => {
