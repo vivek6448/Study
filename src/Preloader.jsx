@@ -135,7 +135,7 @@ export default function Preloader({ onDone, ready = true }) {
           initial={{ opacity: 1 }}
           exit={{ opacity: 0, transition: { duration: 0.5, ease: "easeInOut" } }}
         >
-          <p className="preloader-heading">Let's Start Study JavaScript and React JS</p>
+          <p className="preloader-heading">Let's Start Preparation for Fullstack Interview</p>
           <span className="preloader-count">{display}</span>
           <motion.span className="preloader-divider" style={{ backgroundColor: dividerColor }} />
         </motion.div>

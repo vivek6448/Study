@@ -1,5 +1,6 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import CodingSection from "./CodingSection";
+import { NODE_THEORY_CATEGORIES } from "./nodeTheory";
 
 const STUDY_PROGRESS_KEY = "studyProgress";
 
@@ -31,8 +32,10 @@ function loadLastCategory(fallback) {
   return currentTopic && CATEGORIES.some(c => c.id === currentTopic) ? currentTopic : fallback;
 }
 
-const CATEGORIES = [
-{
+
+
+const CATEGORIES_BASE = [
+  {
     id: "js-core", label: "JS Core", icon: "📜", color: "#F7DF1E", section: "JavaScript",
     def_en: "JavaScript is a single-threaded, dynamically typed, prototype-based scripting language. It runs in browsers and servers (Node.js) and uses an event loop to handle async work without blocking the main thread.",
     def_hi: "JavaScript ek single-threaded, dynamically typed, prototype-based scripting language hai. Ye browsers aur servers (Node.js) dono jagah chalti hai, aur event loop use karke async kaam handle karti hai — main thread ko block kiye bina.",
@@ -2674,7 +2677,7 @@ function Link({ to }) {
     ],
   },
 
-  // ═══════════════════ REACT ═══════════════════
+  // ═════════════════════ REACT ═════════════════════
   {
     id: "react-core", label: "React Core", icon: "⚛", color: "#61DAFB", section: "React",
     def_en: "React is a declarative UI library. Components are functions returning JSX (virtual DOM descriptors). React reconciles the virtual tree with the real DOM, batching and optimizing updates.",
@@ -5697,6 +5700,7 @@ const MyRenderer = {
       },
     ],
   },
+
   {
     id: "css-core", label: "Box, Flex & Grid", icon: "📦", color: "#2965F1", section: "CSS",
     def_en: "CSS controls layout, color, and typography, kept deliberately separate from HTML's structure. The box model, Flexbox, and Grid are the three layout engines every modern UI is built on.",
@@ -6412,7 +6416,299 @@ dist/
       },
     ],
   },
+
+  {
+    id: "nextjs-core", label: "Next.js Core & Rendering", icon: "▲", color: "#FFFFFF", section: "Next.js",
+    def_en: "The mental model behind Next.js: what it adds over plain React, the four rendering strategies (SSR/SSG/ISR/CSR), the Server/Client Component split, hydration, and what the build pipeline actually produces.",
+    def_hi: "Next.js ka mental model: plain React ke upar ye kya add karta hai, chaar rendering strategies (SSR/SSG/ISR/CSR), Server/Client Component split, hydration, aur build pipeline actually kya produce karta hai.",
+    questions: [
+      {
+        q: "What is Next.js, and what does it actually give you over plain React (CRA/Vite)?",
+        a_en: "React is just a UI library — it renders components, nothing more. Next.js is a framework built on top of React that adds everything a production app needs: file-based routing, multiple rendering strategies (SSR/SSG/ISR/CSR) chosen per route, a built-in bundler (Webpack or Turbopack) with automatic code-splitting, image/font optimization, API/Route Handlers so you don't always need a separate backend, and a production server or static export out of the box. CRA/Vite give you a client-only SPA — everything renders in the browser, hurting SEO and first paint. Next.js lets you choose, per page, how much rendering happens on the server vs the client.",
+        a_hi: "React sirf ek UI library hai — components render karta hai, bas. Next.js React ke upar bana framework hai jo production app ki har cheez deta hai: file-based routing, multiple rendering strategies (SSR/SSG/ISR/CSR) jo per-route choose kar sakte ho, built-in bundler (Webpack/Turbopack) automatic code-splitting ke saath, image/font optimization, API/Route Handlers (alag backend ki zaroorat nahi), aur production server ya static export directly. CRA/Vite sirf client-side SPA dete hain — sab kuch browser mein render hota hai, jisse SEO aur first paint dono kharab hote hain. Next.js mein per-page decide kar sakte ho ki kitna rendering server pe ho aur kitna client pe.",
+      },
+      {
+        q: "Explain the rendering strategies: SSR, SSG, ISR, and CSR — differences and when to use each.",
+        a_en: "SSG (Static Site Generation): HTML generated once at build time — fastest response since it's served straight from CDN with zero per-request server work. Use for content that doesn't change per request, like marketing pages or docs. SSR (Server-Side Rendering): HTML generated on every request on the server — use when content is personalized or must be fresh on every hit, like a logged-in dashboard. ISR (Incremental Static Regeneration): static like SSG but regenerated in the background after a revalidate window, without a full rebuild — gives static-speed reads with periodic freshness, good for product pages. CSR (Client-Side Rendering): browser fetches data and renders after JS loads — use for highly interactive, non-SEO-critical sections. The trade-off: SSG/ISR optimize for speed and cacheability at the cost of freshness; SSR optimizes for freshness at the cost of server load and slower TTFB; CSR shifts work to the client at the cost of SEO and initial paint.",
+        a_hi: "SSG (Static Site Generation): HTML build time pe ek baar generate hota hai — sabse fast response kyunki CDN se seedha serve hota hai, per-request server work zero. Use karo content ke liye jo request-to-request change nahi hota, jaise marketing pages ya docs. SSR (Server-Side Rendering): HTML har request pe server pe generate hota hai — jab content personalized ho ya har hit pe fresh chahiye, jaise logged-in dashboard. ISR (Incremental Static Regeneration): SSG jaisa static, but ek revalidate window ke baad background mein regenerate hota hai, full rebuild ke bina — static-speed reads milte hain periodic freshness ke saath. CSR (Client-Side Rendering): browser JS load hone ke baad data fetch karke render karta hai — highly interactive, non-SEO-critical sections ke liye. Trade-off: SSG/ISR speed/cacheability optimize karte hain freshness ki cost pe; SSR freshness optimize karta hai server load/slow TTFB ki cost pe; CSR kaam client pe shift karta hai SEO/initial paint ki cost pe.",
+      },
+      {
+        q: "What's the difference between the Pages Router and the App Router?",
+        a_en: "Pages Router (pages/) is the original model: one file equals one route, data fetching via getStaticProps/getServerSideProps/getStaticPaths exported from the page, and everything renders as a Client Component by default (fully hydrated). App Router (app/, stable since Next 13) is built around React Server Components: components are server-rendered by default with zero client JS unless you opt in with 'use client', routing is folder-based with special files (page.js, layout.js, loading.js, error.js), and data fetching happens directly in async Server Components via fetch/await instead of framework-specific exports. App Router also adds nested layouts, streaming, parallel/intercepting routes, and Server Actions — none of which exist in Pages Router.",
+        a_hi: "Pages Router (pages/) original model hai: ek file = ek route, data fetching getStaticProps/getServerSideProps/getStaticPaths se, aur har cheez default mein Client Component ban ke fully hydrate hoti hai. App Router (app/, Next 13 se stable) React Server Components pe based hai: components default server-rendered hote hain, zero client JS jab tak 'use client' na likho, routing folder-based hai special files ke saath (page.js, layout.js, loading.js, error.js), aur data fetching directly async Server Components mein fetch/await se hoti hai. App Router mein nested layouts, streaming, parallel/intercepting routes, aur Server Actions bhi hain — jo Pages Router mein nahi the.",
+      },
+      {
+        q: "What are Server Components vs Client Components — explain the mechanism, not just the syntax.",
+        a_en: "In App Router, every component is a Server Component by default: it runs only on the server, is never shipped to the browser as JS, and can directly do server-only things (read a DB, use secrets, await fetch without an API layer). Its output is serialized into a streamable RSC payload sent to the client, which React reconciles into the DOM. Adding 'use client' marks a file (and everything it imports) as a Client Component: it ships as JS, hydrates in the browser, and can use useState/useEffect/browser APIs/event handlers. Server Components reduce client bundle size and let data fetching happen close to the source without an API waterfall; Client Components are for interactivity. Trap: you can't import a Server Component into a Client Component file and expect it to stay server-only — once you cross into 'use client', everything downstream needs to run in the browser unless passed in as children/props from a server parent.",
+        a_hi: "App Router mein har component default Server Component hota hai: sirf server pe run hota hai, browser ko JS ke roop mein kabhi nahi bheja jaata, aur direct server-only kaam kar sakta hai (DB read, secrets, API layer ke bina fetch). Iska output ek streamable RSC payload mein serialize hoke client ko jaata hai, jise React DOM mein reconcile karta hai. File ke top pe 'use client' likhne se wo (aur uske saare imports) Client Component ban jaate hain: JS ban ke ship hote hain, browser mein hydrate hote hain, aur useState/useEffect/browser APIs/event handlers use kar sakte hain. Server Components client bundle size kam karte hain aur data source ke paas hi fetch kar lete hain bina API waterfall ke; Client Components interactivity ke liye hain. Trap: ek Server Component ko Client Component file mein import karke server-only rehne ki ummeed mat karo — 'use client' cross karte hi neeche ka poora subtree browser mein hi run hoga, jab tak use server parent se children/props ke through pass na karo.",
+      },
+      {
+        q: "How does hydration work in Next.js, and what causes a hydration mismatch?",
+        a_en: "The server renders the initial HTML (from Client Components' server-rendered pass) and sends it already painted. React then hydrates on the client: it walks the same component tree, attaches event listeners, and reconciles it against the existing DOM instead of re-creating it — this is what makes the page interactive without a visible re-render. A hydration mismatch happens when the HTML React generates on the client doesn't match what the server sent — common causes: Date.now()/Math.random()/window/localStorage reads during render, locale-dependent formatting that differs by timezone, or invalid HTML nesting the browser silently fixes before React sees it. Fix: move non-deterministic or browser-only reads into useEffect, or guard with a mounted-state check.",
+        a_hi: "Server initial HTML render karta hai (Client Components ke server-rendered pass se) aur already-painted state mein bhejta hai. Phir React client pe hydrate karta hai: same component tree walk karta hai, event listeners attach karta hai, aur existing DOM ko re-create karne ke bajaye reconcile karta hai — isi se page bina visible re-render ke interactive ban jaata hai. Hydration mismatch tab hota hai jab client pe React ka generate kiya HTML server ke bheje HTML se match nahi karta — common causes: render ke dauraan Date.now()/Math.random()/window/localStorage read karna, timezone ke hisaab se alag locale formatting, ya invalid HTML nesting jise browser React se pehle hi silently fix kar deta hai. Fix: non-deterministic ya browser-only reads ko useEffect mein daalo, ya mounted-state check se guard karo.",
+      },
+      {
+        q: "What does the Next.js build actually produce (what's in .next/)?",
+        a_en: "next build runs the compiler (Webpack/Turbopack) and produces: pre-rendered HTML for every static/ISR route, a manifest mapping routes to their JS chunks for code-splitting, serialized RSC payloads for Server Components, optimized/minified client bundles split per route plus shared framework chunks, and a BUILD_ID used for cache-busting and detecting stale deployments. For SSR/dynamic routes it produces the server-side render function instead of static HTML. This is why a production server (next start) is meaningfully different from just serving static files — some routes need the Node process alive to render on demand, which is also why output: 'export' (fully static) can't support SSR or Route Handlers.",
+        a_hi: "next build compiler (Webpack/Turbopack) chalata hai aur produce karta hai: har static/ISR route ka pre-rendered HTML, routes ko unke JS chunks se map karta manifest (code-splitting ke liye), Server Components ke serialized RSC payloads, per-route optimized/minified client bundles plus shared framework chunks, aur ek BUILD_ID jo cache-busting aur stale deployments detect karne ke liye use hota hai. SSR/dynamic routes ke liye static HTML ke bajaye server-side render function banta hai. Isi wajah se production server (next start) sirf static files serve karne se alag hai — kuch routes ko on-demand render karne ke liye Node process zinda chahiye hota hai, isi liye output: 'export' (fully static) SSR ya Route Handlers support nahi karta.",
+      },
+      {
+        q: "Explain getStaticProps, getServerSideProps, and getStaticPaths (Pages Router) — when does each run?",
+        a_en: "getStaticProps runs at build time (and again in the background for ISR revalidation) — output is baked into static HTML, never runs in the browser. getServerSideProps runs on every request, server-side, before the page is sent — good for per-request personalization, but means no CDN caching of the HTML by default. getStaticPaths is required alongside getStaticProps on dynamic routes ([id].tsx) — it tells Next.js which param values to pre-render at build time, and via fallback: true/'blocking'/false controls what happens for paths not pre-rendered. This is legacy for new App Router work but still comes up on existing Pages Router codebases — worth knowing even while explaining you'd reach for generateStaticParams + async Server Components today.",
+        a_hi: "getStaticProps build time pe run hota hai (aur ISR revalidation ke liye background mein phir se) — output static HTML mein bake ho jaata hai, browser mein kabhi nahi chalta. getServerSideProps har request pe, server-side, page bhejne se pehle run hota hai — per-request personalization ke liye acha, but iska matlab HTML ki default CDN caching nahi hoti. getStaticPaths dynamic routes ([id].tsx) pe getStaticProps ke saath zaroori hai — batata hai ki build time pe konse param values pre-render karne hain, aur fallback: true/'blocking'/false se decide hota hai ki non-pre-rendered paths ka kya ho. Naye App Router kaam ke liye ye legacy hai but existing Pages Router codebase mein aksar poocha jaata hai — fluent rehna zaroori hai, saath mein ye bhi bata do ki aaj generateStaticParams + async Server Components use karoge.",
+      },
+      {
+        q: "What is ISR, and how does revalidate actually work under the hood?",
+        a_en: "With export const revalidate = 60 (App Router) or { revalidate: 60 } (Pages Router), the page is served from the static cache immediately on every request — no one waits for regeneration. Once a request comes in after the 60-second window has elapsed, Next.js serves the now-stale cached page and triggers a regeneration in the background; once that finishes, the cache is swapped for subsequent requests. This is stale-while-revalidate behavior — no single user is ever blocked waiting for a rebuild. On Vercel it's implemented via on-demand functions invoked at the CDN edge rather than a long-running server. Interview trap: ISR doesn't mean the page updates instantly for everyone the moment data changes — there's always at least one stale serve within the window, unless you use on-demand revalidation (revalidatePath/revalidateTag) to invalidate immediately on a mutation.",
+        a_hi: "export const revalidate = 60 (App Router) ya { revalidate: 60 } (Pages Router) se, page har request pe turant static cache se serve hota hai — koi bhi regeneration ka wait nahi karta. 60-second window khatam hone ke baad jab request aata hai, Next.js abhi-stale cached page serve karta hai aur background mein regeneration trigger karta hai; wo khatam hone ke baad, cache next requests ke liye swap ho jaata hai. Ye stale-while-revalidate behavior hai — koi bhi single user kabhi rebuild ka wait nahi karta. Vercel pe ye on-demand functions se implement hota hai jo CDN edge pe invoke hote hain, na ki long-running server se. Interview trap: ISR ka matlab ye nahi ki data change hote hi sabke liye page turant update ho jaaye — window ke andar hamesha kam se kam ek stale serve hota hai, jab tak on-demand revalidation (revalidatePath/revalidateTag) se mutation pe turant invalidate na karo.",
+      },
+      {
+        q: "What is streaming SSR, and how does Suspense enable it in Next.js?",
+        a_en: "Traditional SSR blocks the whole response until every component (including slow data fetches) finishes — the user sees a blank page until everything is ready. Streaming SSR (built on React 18's renderToReadableStream) sends HTML in chunks as it becomes ready: the shell (layout, nav, static content) is flushed immediately, and any component wrapped in <Suspense fallback={...}> streams in its content later, once its data resolves, without blocking the rest of the page. In App Router this is automatic — wrap a slow Server Component in <Suspense> and Next.js streams it in place, swapping the fallback for real content via a small inline script once the chunk arrives. This directly improves perceived performance (TTFB and FCP happen sooner) even though total data-loading time is unchanged.",
+        a_hi: "Traditional SSR poore response ko tab tak block karta hai jab tak har component (slow data fetches sahit) complete nahi ho jaata — user ko sab kuch ready hone tak blank page dikhta hai. Streaming SSR (React 18 ke renderToReadableStream pe based) HTML ko chunks mein bhejta hai jaise-jaise ready hota hai: shell (layout, nav, static content) turant flush hota hai, aur <Suspense fallback={...}> mein wrapped koi bhi component baad mein, data resolve hone pe, apna content stream karta hai — bina baaki page ko block kiye. App Router mein ye automatic hai — slow Server Component ko <Suspense> mein wrap karo aur Next.js usse in-place stream kar deta hai, chunk aane pe ek chhoti inline script se fallback ko real content se swap kar deta hai. Isse perceived performance directly improve hoti hai (TTFB aur FCP jaldi hote hain) chahe total data-loading time same rahe.",
+      },
+      {
+        q: "Edge Runtime vs Node.js runtime — what's the actual difference?",
+        a_en: "The Node.js runtime is a full Node process — access to all Node APIs (fs, native modules, longer execution time, more memory), used for most Route Handlers, heavy Server Components, and anything needing a Node-only package. The Edge Runtime is a stripped-down, V8-isolate-based runtime (similar to Cloudflare Workers) that runs geographically close to the user, starts near-instantly, but only supports a subset of Web APIs — no fs, no native Node modules, and a smaller execution time budget. Middleware always runs on the Edge Runtime since it has to run before routing, on every request, so speed matters more than capability. You explicitly opt a Route Handler or page into Edge with export const runtime = 'edge' — worth doing for latency-sensitive, lightweight logic (auth checks, redirects, geolocation), not for anything needing a full Node dependency.",
+        a_hi: "Node.js runtime ek full Node process hai — saare Node APIs access karta hai (fs, native modules, zyada execution time, zyada memory), zyaadatar Route Handlers, heavy Server Components, aur Node-only package chahiye wahan use hota hai. Edge Runtime ek stripped-down, V8-isolate-based runtime hai (Cloudflare Workers jaisa) jo user ke geographically close run hota hai, near-instantly start hota hai, but sirf Web APIs ka subset support karta hai — fs nahi, native Node modules nahi, aur execution time budget bhi kam. Middleware hamesha Edge Runtime pe hi chalta hai kyunki routing se pehle, har request pe run hona hai, isliye speed capability se zyada important hai. Route Handler ya page ko explicitly export const runtime = 'edge' se Edge mein daalte ho — latency-sensitive, lightweight logic (auth checks, redirects, geolocation) ke liye achha, Node-only dependency waale kaam ke liye nahi.",
+      },
+      {
+        q: "SSR vs SSG vs CSR — compare TTFB, FCP, and SEO trade-offs directly.",
+        a_en: "SSG: best TTFB (served from CDN edge, zero compute), best FCP, full SEO since crawlers get complete HTML immediately. SSR: TTFB is slower than SSG since the server has to render per request (DB calls etc. are in the critical path), but FCP is still reasonable since HTML arrives complete; SEO is fully supported. CSR: fastest TTFB for the shell (empty HTML ships instantly), but FCP/LCP are delayed until JS loads and fetches run, and SEO is weak unless the crawler executes JS (most do now, but it's slower/unreliable and hurts crawl budget at scale). Connect this to Core Web Vitals: SSG/ISR give the best LCP scores by default; CSR risks a poor LCP and layout shift unless carefully managed.",
+        a_hi: "SSG: best TTFB (CDN edge se serve, zero compute), best FCP, full SEO kyunki crawlers ko complete HTML turant milta hai. SSR: TTFB SSG se slow hai kyunki server ko per-request render karna padta hai (DB calls critical path mein hote hain), but FCP fir bhi reasonable hai kyunki HTML complete aata hai; SEO fully supported hai. CSR: shell ke liye sabse fast TTFB (empty HTML turant ship), but FCP/LCP tab tak delay hote hain jab tak JS load na ho aur fetches na chalein, aur SEO weak hai jab tak crawler JS execute na kare (aaj-kal zyaadatar karte hain, but slow/unreliable hai aur scale pe crawl budget hurt karta hai). Core Web Vitals se connect karo: SSG/ISR default mein best LCP scores dete hain; CSR mein LCP aur layout shift kharab ho sakte hain agar carefully manage na karo.",
+      },
+      {
+        q: "How does Next.js handle code-splitting automatically?",
+        a_en: "Every route gets its own JS chunk by default — visiting /dashboard doesn't download the code for /settings. Shared dependencies (React itself, common UI components) are extracted into shared chunks so they're cached once and reused across routes. Beyond the automatic per-route split, you can manually split with next/dynamic (dynamic(() => import('./Heavy'), { ssr: false })) to lazy-load a component only when needed — common for large third-party widgets. next/link prefetches the JS for linked routes when they enter the viewport, so navigation feels instant despite the splitting — this prefetch-on-visibility behavior is what makes code-splitting invisible to the user in practice.",
+        a_hi: "Har route ko default mein apna alag JS chunk milta hai — /dashboard pe jaane se /settings ka code download nahi hota. Shared dependencies (React khud, common UI components) shared chunks mein extract hoti hain taaki ek baar cache hoke saare routes pe reuse ho sakein. Automatic per-route split ke alawa, next/dynamic (dynamic(() => import('./Heavy'), { ssr: false })) se manually bhi split kar sakte ho taaki component sirf zaroorat pe lazy-load ho — bade third-party widgets (charting libraries, rich text editors) ke liye common hai. next/link linked routes ka JS automatically prefetch karta hai jab wo viewport mein aate hain, isliye splitting ke bawajood navigation instant feel hota hai — yahi prefetch-on-visibility behavior hai jo code-splitting ko user ke liye invisible bana deta hai.",
+      },
+    ],
+  },
+
+  {
+    id: "nextjs-routing", label: "Next.js Routing & App Router", icon: "🧭", color: "#38BDF8", section: "Next.js",
+    def_en: "App Router's file-based routing system — dynamic and catch-all segments, layouts vs templates, loading/error boundaries, parallel and intercepting routes, route groups, middleware, and the Metadata API.",
+    def_hi: "App Router ka file-based routing system — dynamic aur catch-all segments, layouts vs templates, loading/error boundaries, parallel aur intercepting routes, route groups, middleware, aur Metadata API.",
+    questions: [
+      {
+        q: "How does folder structure map to routes in the App Router?",
+        a_en: "Every folder under app/ is a route segment; a route only becomes publicly accessible once that folder contains a page.js/page.tsx — folders without a page file are just structural (for layouts, colocated components, or grouping) and don't create a URL. So app/dashboard/settings/page.tsx maps to /dashboard/settings. This is a deliberate difference from Pages Router, where every file under pages/ was automatically a route — App Router lets you colocate non-route files (components, tests, styles) inside route folders without accidentally creating new pages.",
+        a_hi: "app/ ke andar har folder ek route segment hai; koi route tabhi publicly accessible banta hai jab us folder mein page.js/page.tsx ho — page file ke bina folders sirf structural hote hain (layouts, colocated components, ya grouping ke liye) aur URL nahi banate. Toh app/dashboard/settings/page.tsx /dashboard/settings pe map hota hai. Ye Pages Router se deliberate difference hai, jahan pages/ ke andar har file automatically ek route ban jaati thi — App Router mein non-route files (components, tests, styles) route folders ke andar colocate kar sakte ho bina accidentally naye pages banaye.",
+      },
+      {
+        q: "Dynamic routes ([id]) and catch-all routes ([...slug] vs [[...slug]]) — differences.",
+        a_en: "[id] matches a single dynamic segment — app/posts/[id]/page.tsx matches /posts/42, with params.id === '42'. [...slug] is a catch-all — it matches one or more segments (/posts/a/b/c → params.slug === ['a','b','c']), but does not match the base route /posts itself. [[...slug]] (double brackets) is an optional catch-all — it matches everything [...slug] does, plus the base route with params.slug === undefined. Common real use: [[...slug]] for a CMS-driven site where / and /any/nested/path should both resolve through one page component.",
+        a_hi: "[id] ek single dynamic segment match karta hai — app/posts/[id]/page.tsx /posts/42 match karta hai, params.id === '42' hoga. [...slug] catch-all hai — ek ya zyaada segments match karta hai (/posts/a/b/c → params.slug === ['a','b','c']), but base route /posts ko khud match nahi karta. [[...slug]] (double brackets) optional catch-all hai — [...slug] jo bhi karta hai wo sab plus base route ko bhi match karta hai jahan params.slug === undefined hoga. Real use: CMS-driven site mein [[...slug]] jahan / aur /any/nested/path dono ek hi page component se resolve hone chahiye.",
+      },
+      {
+        q: "layout.js vs page.js vs template.js — what's the actual difference?",
+        a_en: "page.js is the unique, route-terminal UI for a segment. layout.js wraps a segment and all its nested routes, and — critically — persists across navigations within it: it doesn't re-render or lose state when you navigate between child pages, which is why it's the right place for a sidebar or nav bar that shouldn't flicker/remount. template.js looks similar (also wraps children) but creates a new instance on every navigation — state resets, useEffects re-run. Use template.js only when you specifically need that per-navigation reset (e.g. a page-enter animation that must replay every time), which is rare — most nav-shell UI wants layout.js.",
+        a_hi: "page.js ek segment ka unique, route-terminal UI hai. layout.js poore segment aur uske saare nested routes ko wrap karta hai, aur — sabse important — usme navigations ke beech persist karta hai: child pages ke beech navigate karne pe re-render ya state lose nahi hota, isliye ye sidebar ya nav bar jaise UI ke liye sahi jagah hai jo flicker/remount nahi hona chahiye. template.js dikhta similar hai (wo bhi children wrap karta hai) but har navigation pe naya instance banata hai — state reset hota hai, useEffects phir se chalte hain. template.js sirf tab use karo jab specifically per-navigation reset chahiye (jaise page-enter animation jo har baar replay ho), jo rare hai — zyaadatar nav-shell UI ko layout.js hi chahiye.",
+      },
+      {
+        q: "loading.js and error.js — how do they integrate with Suspense and Error Boundaries?",
+        a_en: "Both are Next.js conventions that compile down to standard React primitives. loading.js automatically wraps the segment's page.js in a <Suspense> boundary and renders as the fallback while the page (and any async Server Components in it) are loading — you don't write the <Suspense> yourself, Next.js does it for you at the routing layer. error.js automatically wraps the segment in an Error Boundary (it must be a Client Component, since Error Boundaries rely on component lifecycle, which doesn't exist for Server Components) and renders when a rendering or data-fetching error is thrown anywhere in that segment; it receives an error object and a reset() function to retry rendering. Together they give you route-level loading and error UI with no manual boilerplate, and because they're scoped per-segment, a slow/broken nested route doesn't necessarily take down the whole page.",
+        a_hi: "Dono Next.js conventions hain jo standard React primitives mein compile ho jaate hain. loading.js automatically segment ke page.js ko <Suspense> boundary mein wrap karta hai aur page (aur uske andar ke async Server Components) load hone tak fallback render karta hai — <Suspense> khud nahi likhna padta, Next.js routing layer pe khud kar deta hai. error.js automatically segment ko Error Boundary mein wrap karta hai (ye Client Component hona zaroori hai kyunki Error Boundaries component lifecycle pe depend karte hain jo Server Components mein nahi hota) aur render hota hai jab us segment mein kahin bhi rendering ya data-fetching error throw ho; isse ek error object aur retry ke liye reset() function milta hai. Dono milke route-level loading aur error UI dete hain bina manual boilerplate ke, aur per-segment scoped hone ki wajah se, ek slow/broken nested route poore page ko down nahi karta.",
+      },
+      {
+        q: "Parallel routes (@slot) — what problem do they solve?",
+        a_en: "Parallel routes let you render two or more independent pages in the same layout simultaneously, each with its own loading/error state — e.g. a dashboard with @analytics and @team slots that load independently, so a slow analytics query doesn't block the team panel from appearing. Defined with a @folder naming convention (app/@analytics/page.tsx), and the parent layout.js receives them as named props ({ children, analytics, team }) to place wherever needed. Without parallel routes, you'd need one Server Component fetching everything sequentially or a client-side waterfall to fake this independence.",
+        a_hi: "Parallel routes se ek hi layout mein do ya zyaada independent pages ek saath render kar sakte ho, har ek ka apna loading/error state — jaise ek dashboard jisme @analytics aur @team slots independently load hote hain, isliye slow analytics query team panel ko block nahi karti. @folder naming convention se define hota hai (app/@analytics/page.tsx), aur parent layout.js unhe named props ({ children, analytics, team }) ke through receive karta hai jahan chahe place kar sakte ho. Parallel routes ke bina, ek Server Component sequentially sab fetch karta ya client-side waterfall se ye independence fake karni padti.",
+      },
+      {
+        q: "Intercepting routes — what are they for?",
+        a_en: "Intercepting routes let a route render within the current layout (e.g. as a modal over a feed) when navigated to from within the app, while still rendering as a full standalone page if the URL is hit directly (a hard refresh or shared link). The classic example is Instagram/Twitter-style photo modals: clicking a photo from the feed opens it as an overlay without leaving the feed behind it, but pasting that photo's URL directly loads the full standalone page. Implemented with (.), (..), (..)(..), or (...) folder prefixes indicating how many segment levels up to intercept from, combined with a parallel route slot to render the modal alongside the underlying page.",
+        a_hi: "Intercepting routes se ek route current layout ke andar hi render ho sakta hai (jaise feed ke upar modal) jab app ke andar se navigate kiya jaaye, lekin URL directly hit karne pe (hard refresh ya shared link) wo full standalone page ki tarah render hota hai. Classic example Instagram/Twitter-style photo modals hai: feed se photo click karne pe wo overlay ki tarah khulta hai piche feed rakhte hue, but us photo ka URL directly paste karne pe full standalone page load hota hai. Ye (.), (..), (..)(..), ya (...) folder prefixes se implement hota hai jo batate hain kitne segment levels upar se intercept karna hai, saath mein parallel route slot jo underlying page ke saath modal render karta hai.",
+      },
+      {
+        q: "Route groups — (folderName) — what's their purpose?",
+        a_en: "Wrapping a folder name in parentheses, e.g. app/(marketing)/about/page.tsx, organizes routes without adding a segment to the URL — /about, not /marketing/about. Common uses: applying a different root layout to a subset of routes (e.g. a (marketing) group with a public layout and an (app) group with an authenticated-shell layout, both under the same app/ root without one being nested inside the other's URL), or just organizing a large route tree without affecting URLs.",
+        a_hi: "Folder name ko parentheses mein wrap karna, jaise app/(marketing)/about/page.tsx, routes ko organize karta hai bina URL mein segment add kiye — /about banega, /marketing/about nahi. Common uses: routes ke subset pe alag root layout apply karna (jaise (marketing) group public layout ke saath aur (app) group authenticated-shell layout ke saath, dono same app/ root ke neeche bina ek doosre ke URL mein nest hue), ya bas ek bada route tree organize karna bina URLs affect kiye.",
+      },
+      {
+        q: "generateStaticParams — how does it replace getStaticPaths?",
+        a_en: "It's the App Router equivalent for dynamic routes: an async function exported from page.js that returns an array of param objects ([{ id: '1' }, { id: '2' }]), telling Next.js which paths to pre-render at build time. Unlike getStaticPaths, it doesn't need a paired fallback config exported separately — dynamic behavior for params not returned is controlled by dynamicParams (defaults to true, meaning un-listed params are rendered on-demand and cached, similar to fallback: 'blocking'). It also composes naturally with nested dynamic segments — you can generate params for a child route based on the parent's already-generated params.",
+        a_hi: "Ye dynamic routes ke liye App Router ka equivalent hai: page.js se export hone waala async function jo param objects ka array return karta hai ([{ id: '1' }, { id: '2' }]), Next.js ko batata hai konse paths build time pe pre-render karne hain. getStaticPaths se alag, isko alag se paired fallback config export karne ki zaroorat nahi — jo params return nahi hue unka dynamic behavior dynamicParams se control hota hai (default true hai, matlab un-listed params on-demand render + cache hote hain, fallback: 'blocking' jaisa). Ye nested dynamic segments ke saath naturally compose bhi hota hai — child route ke params parent ke already-generated params ke basis pe generate kar sakte ho.",
+      },
+      {
+        q: "Middleware in Next.js — what is it, where does it run, and what's it good for?",
+        a_en: "A single middleware.ts file at the project root exports a function that runs before a request is matched to a route — on the Edge Runtime, for every request matching its configured matcher. It can inspect/modify the request, rewrite or redirect, set headers/cookies, or short-circuit with a response entirely. Common uses: auth gating (redirect unauthenticated users before they ever reach a protected page), A/B testing (rewrite to a variant based on a cookie), geolocation-based redirects, and bot detection. Because it runs on Edge, it can't do things like direct DB queries with a Node-only driver — it's meant to be a fast, lightweight gate, not a place for business logic. This is the sharpest contrast with Express middleware, which runs in a full Node process mid-request-lifecycle with no such runtime restriction.",
+        a_hi: "Project root mein ek single middleware.ts file ek function export karti hai jo request ko route se match hone se pehle run hota hai — Edge Runtime pe, har request pe jo uske configured matcher se match kare. Ye request ko inspect/modify kar sakta hai, rewrite ya redirect kar sakta hai, headers/cookies set kar sakta hai, ya poori tarah response se short-circuit kar sakta hai. Common uses: auth gating (unauthenticated users ko protected page tak pahunchne se pehle hi redirect), A/B testing (cookie ke basis pe variant pe rewrite), geolocation-based redirects, aur bot detection. Edge pe chalne ki wajah se ye Node-only driver se direct DB queries nahi kar sakta — ye ek fast, lightweight gate hone ke liye hai, business logic ki jagah nahi. Express middleware se sabse sharp contrast yahi hai, jo full Node process mein mid-request-lifecycle mein chalta hai bina aisi kisi runtime restriction ke.",
+      },
+      {
+        q: "How does next/link implement client-side navigation and prefetching?",
+        a_en: "<Link> intercepts the click, prevents a full page reload, and uses the History API (pushState) to update the URL while App Router's client-side transition logic fetches just the new segment's data/RSC payload and patches the DOM — this is the Router Cache doing its job. Prefetching happens automatically: when a <Link> enters the viewport (via IntersectionObserver), Next.js prefetches the linked route's JS and, for static routes, its rendered payload, in the background — so by the time the user actually clicks, the navigation feels instant because the work already happened. This is why nav bars with many links don't feel like they're spamming requests — prefetch is throttled and only fires for visible links.",
+        a_hi: "<Link> click ko intercept karta hai, full page reload rokta hai, aur History API (pushState) se URL update karta hai jabki App Router ka client-side transition logic sirf naye segment ka data/RSC payload fetch karke DOM patch karta hai — ye Router Cache ka kaam hai. Prefetching automatically hoti hai: jab <Link> viewport mein aata hai (IntersectionObserver se), Next.js background mein linked route ka JS aur, static routes ke liye, uska rendered payload prefetch kar leta hai — isliye jab user actually click karta hai, navigation instant feel hota hai kyunki kaam pehle hi ho chuka hota hai. Isi wajah se bahut saare links waale nav bars requests spam nahi karte lagte — prefetch throttled hota hai aur sirf visible links ke liye fire hota hai.",
+      },
+      {
+        q: "next/navigation vs next/router — why the split?",
+        a_en: "next/router (useRouter, withRouter) is the Pages Router API. next/navigation (useRouter, usePathname, useSearchParams, redirect) is the App Router API, and the two are not interchangeable — importing from the wrong one in the wrong router throws at runtime. Key behavioral difference: App Router's useRouter().push() doesn't include query-string helpers the old API had, since URL/search-param state is meant to be read via useSearchParams (a Client Component hook) rather than baked into the router object. Also worth knowing: redirect() from next/navigation can be called directly inside a Server Component (it throws a special error Next.js catches to perform the redirect), which has no Pages Router equivalent.",
+        a_hi: "next/router (useRouter, withRouter) Pages Router ka API hai. next/navigation (useRouter, usePathname, useSearchParams, redirect) App Router ka API hai, aur dono interchangeable nahi hain — galat router mein galat wale se import karne pe runtime pe error aata hai. Key behavioral difference: App Router ke useRouter().push() mein query-string helpers nahi hain jo old API mein the, kyunki URL/search-param state ab useSearchParams (ek Client Component hook) se read hota hai, router object mein baked nahi hota. Ye bhi jaanna zaroori: next/navigation ka redirect() Server Component ke andar directly call ho sakta hai (ye ek special error throw karta hai jise Next.js catch karke redirect perform karta hai), jiska Pages Router mein koi equivalent nahi hai.",
+      },
+      {
+        q: "The Metadata API — how does SEO/<head> management work in the App Router?",
+        a_en: "Instead of a <Head> component (Pages Router), you export a metadata object (static) or a generateMetadata async function (dynamic — e.g. needs to fetch a blog post's title) from page.js/layout.js. Next.js merges metadata from nested layouts and the page automatically — a shared layout can set a default title.template, and each page fills in title, which gets composed together, so you don't have to redeclare boilerplate meta tags on every page. generateMetadata runs on the server, can await the same data-fetching used by the page (and Next.js deduplicates that fetch via Request Memoization, so it's not fetched twice), and supports OpenGraph, Twitter cards, and dynamic OG image generation via the ImageResponse API.",
+        a_hi: "<Head> component (Pages Router) ki jagah, ab page.js/layout.js se ek metadata object (static) ya generateMetadata async function (dynamic — jaise blog post ka title fetch karna ho) export karte ho. Next.js nested layouts aur page se metadata ko automatically merge karta hai — shared layout ek default title.template set kar sakta hai, aur har page apna title fill karta hai jo compose ho jaata hai, isliye har page pe boilerplate meta tags dobara likhne ki zaroorat nahi. generateMetadata server pe run hota hai, page waali hi data-fetching await kar sakta hai (aur Next.js Request Memoization se us fetch ko dedupe kar deta hai, dobara fetch nahi hota), aur OpenGraph, Twitter cards, aur ImageResponse API se dynamic OG image generation support karta hai.",
+      },
+    ],
+  },
+
+  {
+    id: "nextjs-data", label: "Next.js Data Fetching & Caching", icon: "🗄", color: "#A78BFA", section: "Next.js",
+    def_en: "How fetch caching, the four caching layers, on-demand revalidation, and Server vs Client data fetching actually work — including how to avoid request waterfalls.",
+    def_hi: "fetch caching, chaar caching layers, on-demand revalidation, aur Server vs Client data fetching actually kaise kaam karte hain — request waterfalls avoid karna bhi included.",
+    questions: [
+      {
+        q: "How does fetch caching work by default in the App Router?",
+        a_en: "Next.js extends the native fetch API with caching semantics baked in. By default, fetch(url) inside a Server Component is cached indefinitely (force-cache) — equivalent to SSG behavior for that data. fetch(url, { cache: 'no-store' }) opts out entirely, fetching fresh on every request — equivalent to SSR. fetch(url, { next: { revalidate: 60 } }) gives you ISR-style time-based revalidation for that specific fetch, independent of the rest of the page. This is a deliberate design choice: caching is controlled per-fetch-call, not just per-route, so a single page can have some data that's static and some that's always fresh.",
+        a_hi: "Next.js native fetch API ko caching semantics ke saath extend karta hai. Default mein, Server Component ke andar fetch(url) indefinitely cache hota hai (force-cache) — us data ke liye SSG jaisa behavior. fetch(url, { cache: 'no-store' }) poori tarah opt-out karta hai, har request pe fresh fetch karta hai — SSR jaisa. fetch(url, { next: { revalidate: 60 } }) us specific fetch ke liye ISR-style time-based revalidation deta hai, baaki page se independent. Ye deliberate design choice hai: caching per-fetch-call control hoti hai, sirf per-route nahi, isliye ek hi page mein kuch data static ho sakta hai aur kuch hamesha fresh.",
+      },
+      {
+        q: "Explain the four Next.js caching layers.",
+        a_en: "1. Request Memoization — within a single render pass, identical fetch calls (same URL + options) are automatically deduplicated: call the same fetch in three different components rendering the same request, and only one network call happens. Scoped to one request only, cleared after. 2. Data Cache — persists across requests and deployments (server-side), controlled by the fetch cache options above — this is what makes SSG/ISR possible. 3. Full Route Cache — Next.js caches the rendered output (HTML + RSC payload) of static routes at build time, separate from the Data Cache underneath it. 4. Router Cache (client-side) — an in-browser cache of visited/prefetched route segments, so back/forward navigation and revisits within a session don't re-fetch from the server at all. 'Next.js caching' isn't one thing — a bug where data seems stale often means the wrong layer was invalidated.",
+        a_hi: "1. Request Memoization — ek single render pass ke andar, identical fetch calls (same URL + options) automatically dedupe ho jaate hain: teen alag components mein same fetch call karo, sirf ek network call hoga. Sirf ek request tak scoped, baad mein clear ho jaata hai. 2. Data Cache — requests aur deployments ke across persist karta hai (server-side), fetch cache options se control hota hai — isi se SSG/ISR possible hai. 3. Full Route Cache — Next.js static routes ka rendered output (HTML + RSC payload) build time pe cache karta hai, Data Cache se alag layer. 4. Router Cache (client-side) — visited/prefetched route segments ka in-browser cache, isliye back/forward navigation aur session ke andar revisits server se re-fetch nahi karte. 'Next.js caching' ek cheez nahi hai — data stale lage toh usually galat layer invalidate hui hoti hai.",
+      },
+      {
+        q: "How do you opt a specific fetch out of caching?",
+        a_en: "fetch(url, { cache: 'no-store' }) for a one-off dynamic fetch, or export const dynamic = 'force-dynamic' at the page/layout level to make the whole route opt out of static rendering entirely (equivalent to old-style SSR for that route). There's also export const fetchCache = 'force-no-store' to apply it to every fetch in a segment without touching each call individually.",
+        a_hi: "Ek-off dynamic fetch ke liye fetch(url, { cache: 'no-store' }), ya poore route ko static rendering se opt-out karane ke liye page/layout level pe export const dynamic = 'force-dynamic' (us route ke liye old-style SSR jaisa). Ek export const fetchCache = 'force-no-store' bhi hai jo segment ke har fetch pe apply hota hai bina har call ko individually touch kiye.",
+      },
+      {
+        q: "revalidatePath vs revalidateTag — differences and when to use each.",
+        a_en: "Both are on-demand invalidation, typically called from a Server Action or Route Handler after a mutation (e.g. after creating a blog post, immediately invalidate the listing page instead of waiting for the ISR window). revalidatePath('/blog') invalidates the cache for that specific route (and, with the layout option, its full subtree). revalidateTag('posts') invalidates every cached fetch anywhere in the app tagged with { next: { tags: ['posts'] } } — more flexible when the same data is used across multiple, unrelated routes (a 'posts' tag might back both a listing page and a homepage widget), since you invalidate by data identity rather than having to know every URL that depends on it.",
+        a_hi: "Dono on-demand invalidation hain, typically mutation ke baad Server Action ya Route Handler se call hote hain (jaise blog post create hone ke baad listing page ko turant invalidate karna, ISR window ka wait kiye bina). revalidatePath('/blog') us specific route ka cache invalidate karta hai (aur layout option ke saath, uska poora subtree). revalidateTag('posts') app mein kahin bhi { next: { tags: ['posts'] } } se tagged har cached fetch ko invalidate karta hai — jyaada flexible jab same data multiple, unrelated routes mein use ho (ek 'posts' tag listing page aur homepage widget dono ke peeche ho sakta hai), kyunki tum data identity se invalidate karte ho, har URL yaad rakhne ki zaroorat nahi.",
+      },
+      {
+        q: "How do Server Components fetch data differently from Client Components?",
+        a_en: "A Server Component can be async and await fetch(...) directly in the component body — no useEffect, no loading state management, because the component simply doesn't render until the promise resolves (with loading.js/Suspense handling the interim UI at the route level). A Client Component can't be async in this way (React doesn't support async client components for rendering) — it has to fetch via useEffect + useState, or a library like SWR/React Query, and manage loading/error state explicitly, exactly as in plain React. The practical implication: prefer fetching in Server Components whenever the data doesn't need to react to client-side interaction — it eliminates client-server waterfalls and loading spinners entirely for that data.",
+        a_hi: "Server Component async ho sakta hai aur component body mein directly await fetch(...) kar sakta hai — useEffect nahi chahiye, loading state manage nahi karna, kyunki component tab tak render hi nahi hota jab tak promise resolve na ho (loading.js/Suspense route level pe interim UI handle karte hain). Client Component is tarah async nahi ho sakta (React async client components render support nahi karta) — usse useEffect + useState, ya SWR/React Query jaisi library se fetch karna padta hai, aur loading/error state explicitly manage karna padta hai, bilkul plain React jaisa. Practical implication: jahan bhi data ko client-side interaction pe react nahi karna, wahan Server Components mein fetch karna prefer karo — isse us data ke liye client-server waterfalls aur loading spinners poori tarah khatam ho jaate hain.",
+      },
+      {
+        q: "What's a request waterfall, and how do you avoid it in Server Components?",
+        a_en: "A waterfall happens when independent data fetches run sequentially because one await blocks the next, even though nothing actually depends on the earlier result — e.g. await getUser() then await getPosts() in sequence when they don't depend on each other, doubling the total wait. Fix: kick off both fetches without awaiting immediately, then await together — const [user, posts] = await Promise.all([getUser(), getPosts()]) — same principle as parallelizing independent async calls in any Node backend. In Server Components specifically, this also applies across the component tree: passing a fetch promise down to a child (rather than the awaited value) and letting the child await/use() it lets sibling fetches at different levels of the tree still run in parallel instead of blocking on parent-first resolution.",
+        a_hi: "Waterfall tab hota hai jab independent data fetches sequentially chalte hain kyunki ek await agle ko block karta hai, jabki actually koi dependency hi nahi hoti — jaise await getUser() phir await getPosts() sequence mein jab dono ek doosre pe depend nahi karte, total wait double ho jaata hai. Fix: dono fetches ko turant await kiye bina start karo, phir saath mein await karo — const [user, posts] = await Promise.all([getUser(), getPosts()]) — same principle jo kisi bhi Node backend mein independent async calls parallelize karne ka hai. Server Components mein specifically ye component tree ke across bhi lagu hota hai: awaited value ki jagah fetch promise ko child ko pass karke aur child ko await/use() karne dekar, tree ke alag levels ke sibling fetches parent-first resolution pe block hue bina parallel chal sakte hain.",
+      },
+      {
+        q: "How does Next.js handle environment variables, and what does NEXT_PUBLIC_ actually do?",
+        a_en: "Env vars in .env.local/.env.production are available in server-side code (Server Components, Route Handlers, getServerSideProps) via process.env automatically. Anything prefixed NEXT_PUBLIC_ is additionally inlined into the client JS bundle at build time — the build process does a literal string replacement, so process.env.NEXT_PUBLIC_API_URL becomes the actual string value in the shipped bundle. This means a NEXT_PUBLIC_ variable is genuinely public — visible to anyone inspecting the bundle — so secrets must never use that prefix. It also means changing a NEXT_PUBLIC_ value requires a rebuild, not just a server restart, since it's baked in at compile time rather than read at runtime.",
+        a_hi: ".env.local/.env.production ke env vars server-side code (Server Components, Route Handlers, getServerSideProps) mein process.env se automatically available hote hain. NEXT_PUBLIC_ prefix waale koi bhi build time pe client JS bundle mein bhi inline ho jaate hain — build process ek literal string replacement karta hai, toh process.env.NEXT_PUBLIC_API_URL shipped bundle mein actual string value ban jaata hai. Matlab NEXT_PUBLIC_ variable genuinely public hai — bundle inspect karne waale ko dikh jaayega — isliye secrets ko kabhi ye prefix nahi dena chahiye. Isse ye bhi matlab hai ki NEXT_PUBLIC_ value change karne pe rebuild chahiye, sirf server restart se kaam nahi chalega, kyunki ye compile time pe baked hota hai, runtime pe read nahi hota.",
+      },
+      {
+        q: "SWR/React Query vs Server Component data fetching — when do you still need a client library?",
+        a_en: "Server Component fetching covers the initial render well, but it can't handle data that needs to update without a full navigation — polling, refetch-on-window-focus, optimistic updates, or client-driven pagination/search where re-running a server round-trip on every keystroke would be too slow. SWR/React Query still earn their place for that: client-side cache with revalidation strategies, deduping, and mutation helpers that Server Components don't provide (Server Components run once per request; they have no client-side cache concept of their own beyond the Router Cache). Common pattern: use a Server Component for the initial/SEO-relevant data, then hydrate a client-side query library with that data as initialData for any further client-driven interaction.",
+        a_hi: "Server Component fetching initial render ke liye achhi hai, but usse ye data handle nahi ho sakta jise bina full navigation ke update hona ho — polling, refetch-on-window-focus, optimistic updates, ya client-driven pagination/search jahan har keystroke pe server round-trip re-run karna bahut slow ho jaayega. Yahan SWR/React Query apni jagah banate hain: client-side cache with revalidation strategies, deduping, aur mutation helpers jo Server Components nahi dete (Server Components har request pe ek baar run hote hain; Router Cache ke alawa unka apna koi client-side cache concept nahi hota). Common pattern: initial/SEO-relevant data ke liye Server Component use karo, phir usi data ko initialData ke roop mein client-side query library ko hydrate kar do aage ke client-driven interaction ke liye.",
+      },
+      {
+        q: "How do you handle pagination or infinite scroll with Server Components?",
+        a_en: "Two common approaches: (1) URL-driven pagination — ?page=2 read via the searchParams prop on the page, with each page a normal server-rendered navigation (works well for SEO-relevant, discrete pagination); (2) a Server Component for the initial page plus a Client Component (using a Server Action or Route Handler) to fetch subsequent pages on scroll/click without a full navigation, appending to client state. For infinite scroll specifically, option 2 is standard, since option 1 would mean a full page reload per scroll trigger, which defeats the UX goal.",
+        a_hi: "Do common approaches: (1) URL-driven pagination — page pe searchParams prop se ?page=2 read karna, har page ek normal server-rendered navigation (SEO-relevant, discrete pagination ke liye achha kaam karta hai); (2) initial page ke liye Server Component plus ek Client Component (Server Action ya Route Handler use karke) jo scroll/click pe agle pages fetch kare bina full navigation ke, aur client state mein append kare. Infinite scroll ke liye specifically option 2 hi standard hai, kyunki option 1 mein har scroll trigger pe full page reload hoga, jo UX goal ko hi khatam kar dega.",
+      },
+      {
+        q: "Walk through exactly how Request Memoization deduplicates a fetch.",
+        a_en: "Within one server render pass, Next.js patches fetch to keep an in-memory map keyed by the request's URL + options (headers, method, body). If a Server Component calls fetch('/api/user') and, deeper in the tree, another component calls the exact same fetch('/api/user') again, the second call returns the same in-flight/resolved promise instead of issuing a second network request — this only works for fetch itself (not arbitrary DB clients, unless you wrap them similarly with React.cache()). This matters practically because it means you don't have to manually thread fetched data down through props to avoid duplicate calls — you can call the same fetch independently in multiple components and trust the dedup, which keeps components decoupled.",
+        a_hi: "Ek server render pass ke andar, Next.js fetch ko patch karke ek in-memory map rakhta hai jo request ke URL + options (headers, method, body) se key hoti hai. Agar ek Server Component fetch('/api/user') call kare aur tree mein neeche koi aur component wahi exact fetch('/api/user') dobara call kare, toh doosri call same in-flight/resolved promise return karti hai, doosri network request nahi hoti — ye sirf fetch ke liye kaam karta hai (arbitrary DB clients ke liye nahi, jab tak unhe similarly React.cache() se wrap na karo). Ye practically isliye matter karta hai kyunki fetched data ko duplicate calls avoid karne ke liye manually props se thread nahi karna padta — same fetch ko independently multiple components mein call kar sakte ho aur dedup pe trust kar sakte ho, jisse components decoupled rehte hain.",
+      },
+    ],
+  },
+
+  {
+    id: "nextjs-actions", label: "Next.js Server Actions & Middleware", icon: "⚙", color: "#34D399", section: "Next.js",
+    def_en: "Server Actions as RPC-over-HTTP, form handling and progressive enhancement, securing actions like any public endpoint, Route Handlers, and how Next.js middleware compares to Express.",
+    def_hi: "Server Actions as RPC-over-HTTP, form handling aur progressive enhancement, actions ko kisi bhi public endpoint jaisa secure karna, Route Handlers, aur Next.js middleware Express se kaise alag hai.",
+    questions: [
+      {
+        q: "What are Server Actions, and how do they work under the hood?",
+        a_en: "A Server Action is an async function marked with 'use server' (either at the top of the function or the file) that can be called directly from a Client (or Server) Component — most commonly as a form's action prop. Under the hood, Next.js doesn't actually execute it in the browser: it generates a unique, opaque endpoint reference for it, and calling it from the client triggers a POST request to that endpoint, serializing the arguments across the wire — functionally an RPC call, even though it reads like a plain function call in your code. This is why Server Actions can safely touch a database or secrets directly (they run server-side) while being invoked with normal-looking JS syntax on the client.",
+        a_hi: "Server Action ek async function hai jise 'use server' se mark kiya jaata hai (function ke top pe ya file ke top pe) jise Client (ya Server) Component se directly call kar sakte ho — sabse common form ke action prop ke roop mein. Under the hood, Next.js isse actually browser mein execute nahi karta: iske liye ek unique, opaque endpoint reference generate karta hai, aur client se call karne pe us endpoint pe ek POST request trigger hoti hai jo arguments ko wire ke across serialize karti hai — functionally ek RPC call, chahe code mein ye plain function call jaisa dikhe. Isi wajah se Server Actions safely DB ya secrets directly touch kar sakte hain (server-side run hote hain) jabki client pe normal-dikhne wale JS syntax se invoke hote hain.",
+      },
+      {
+        q: "How do Server Actions change form handling compared to a traditional client onSubmit?",
+        a_en: "<form action={myServerAction}> submits directly to the server action — no onSubmit, no manual fetch/axios call, no manually serializing FormData, since the action receives the native FormData object as its argument. Combined with revalidatePath/revalidateTag inside the action, a form submission can trigger a mutation and a cache invalidation in one round trip, with Next.js automatically re-rendering the affected Server Components. Compare to the Pages Router era: you'd write a POST handler in pages/api, an Axios call in the component, and manual state management for loading/error — Server Actions collapse most of that boilerplate.",
+        a_hi: "<form action={myServerAction}> directly server action ko submit karta hai — na onSubmit chahiye, na manual fetch/axios call, na FormData manually serialize karna, kyunki action ko native FormData object argument ke roop mein milta hai. Action ke andar revalidatePath/revalidateTag ke saath combine karke, ek form submission ek hi round trip mein mutation aur cache invalidation dono trigger kar sakta hai, aur Next.js automatically affected Server Components ko re-render kar deta hai. Pages Router era se compare karo: pages/api mein POST handler likhna padta, component mein Axios call, aur loading/error ke liye manual state management — Server Actions ye zyaadatar boilerplate khatam kar dete hain.",
+      },
+      {
+        q: "What does 'progressive enhancement' mean for Server Actions, and why does it matter?",
+        a_en: "A form using a Server Action as its action works even before the client JS has hydrated, and even with JS disabled — because it's a real HTML form submission under the hood (the browser natively POSTs to the action's endpoint), not something that only works via an onClick handler wired up after hydration. This is genuinely different from a typical SPA form. Practically, it means a slow 3G connection or a JS error elsewhere on the page doesn't necessarily break form submission — it degrades to a full-page POST/reload instead of silently doing nothing.",
+        a_hi: "Server Action ko action ke roop mein use karne waala form client JS hydrate hone se pehle bhi kaam karta hai, aur JS disabled hone pe bhi — kyunki under the hood ye ek real HTML form submission hai (browser natively action ke endpoint pe POST karta hai), sirf hydration ke baad wire hue onClick handler pe depend nahi karta. Ye typical SPA form se genuinely alag hai. Practically, matlab slow 3G connection ya page pe kahin aur JS error hone se form submission zaroori nahi break ho — ye silently kuch na karne ke bajaye full-page POST/reload mein degrade ho jaata hai.",
+      },
+      {
+        q: "Server Actions are effectively public HTTP endpoints — how do you secure them?",
+        a_en: "Exactly like any API endpoint: never assume the client that called it is the one you expect. Inside the action itself, re-check authentication (read the session/cookie server-side) and authorization (does this user own this resource / have this role) before performing the mutation — the same never-trust-the-frontend principle as any REST endpoint, because a Server Action's endpoint can be called directly (e.g. via fetch with crafted FormData) bypassing your UI entirely. Also validate/sanitize the incoming FormData with a schema library (Zod is the common pairing) rather than trusting field presence or types.",
+        a_hi: "Bilkul kisi bhi API endpoint jaisa: kabhi ye assume mat karo ki jisne call kiya wahi client hai jo tum expect karte ho. Action ke andar hi, mutation perform karne se pehle authentication re-check karo (session/cookie server-side pe read karo) aur authorization bhi (kya ye user resource ka owner hai / iska role hai) — bilkul wahi never-trust-the-frontend principle jo kisi REST endpoint pe lagta hai, kyunki Server Action ka endpoint directly call ho sakta hai (jaise crafted FormData ke saath fetch se) UI ko poori tarah bypass karke. Incoming FormData ko bhi ek schema library (Zod common pairing hai) se validate/sanitize karo, field presence ya types pe trust karne ke bajaye.",
+      },
+      {
+        q: "Route Handlers (app/api/.../route.js) vs the old Pages Router API routes — differences.",
+        a_en: "Route Handlers export named functions per HTTP method (GET, POST, PUT, DELETE) instead of one default handler switching on req.method, and use the standard Web Request/Response objects instead of Node's req/res — meaning they can run on either the Node or Edge runtime, unlike old API routes which were Node-only. They also compose with the same caching model as Server Component fetch calls (a GET Route Handler is cached by default unless it reads dynamic data like cookies/headers, which auto-opts it into dynamic rendering). Functionally they fill the same role — build a REST-ish endpoint inside the Next.js app — but Server Actions have taken over most form-mutation use cases, leaving Route Handlers mainly for webhooks, third-party integrations, and endpoints genuinely meant to be called from outside the app.",
+        a_hi: "Route Handlers ek default handler jo req.method pe switch karta hai uski jagah har HTTP method (GET, POST, PUT, DELETE) ke liye named functions export karte hain, aur Node ke req/res ki jagah standard Web Request/Response objects use karte hain — matlab ye Node ya Edge dono runtime pe chal sakte hain, jabki purane API routes sirf Node-only the. Ye Server Component fetch calls jaise hi caching model se bhi compose hote hain (GET Route Handler default mein cached hota hai jab tak dynamic data jaise cookies/headers na padhe, jo usse auto dynamic rendering mein daal deta hai). Functionally inka role same hai — Next.js app ke andar ek REST-ish endpoint banana — but Server Actions ne zyaadatar form-mutation use cases le liye hain, Route Handlers mainly webhooks, third-party integrations, aur genuinely app ke bahar se call hone waale endpoints ke liye reh gaye hain.",
+      },
+      {
+        q: "How do you implement authentication in Next.js — outline a realistic flow.",
+        a_en: "Typical setup: credentials checked server-side (Route Handler or Server Action), a session token (JWT or an opaque session ID) set as an httpOnly cookie so client JS can't read/steal it directly. middleware.ts checks for that cookie on protected route patterns and redirects to /login if absent/invalid — this gate runs before any protected page's code executes, so unauthenticated users never even trigger the page's data fetching. Inside Server Components/Server Actions, the session is read again from the cookie (via cookies() from next/headers) to know who's making the request — auth libraries like NextAuth/Auth.js or Clerk wrap most of this (session management, providers, refresh) so it's rarely built fully from scratch, but understanding the underlying cookie + middleware + server-side re-verification flow is what interviewers actually want to hear, not just a library name.",
+        a_hi: "Typical setup: credentials server-side check hote hain (Route Handler ya Server Action), ek session token (JWT ya opaque session ID) httpOnly cookie ke roop mein set hota hai taaki client JS usse directly read/steal na kar sake. middleware.ts protected route patterns pe us cookie ko check karta hai aur absent/invalid hone pe /login pe redirect kar deta hai — ye gate kisi bhi protected page ka code chalne se pehle run hota hai, isliye unauthenticated users page ki data fetching kabhi trigger hi nahi karte. Server Components/Server Actions ke andar, session ko dobara cookie se read karte ho (next/headers ke cookies() se) ye jaanne ke liye ki request kaun kar raha hai — NextAuth/Auth.js ya Clerk jaisi auth libraries zyaadatar ye wrap kar deti hain (session management, providers, refresh), isliye scratch se poora banaya kam hi jaata hai, but underlying cookie + middleware + server-side re-verification flow samajhna hi wo hai jo interviewers actually sunna chahte hain, sirf library ka naam nahi.",
+      },
+      {
+        q: "How is Next.js middleware fundamentally different from Express middleware?",
+        a_en: "Express middleware runs inside a long-lived Node process, has access to the full Node runtime, and sits directly in the request-handling pipeline alongside your routes (app.use(authMiddleware)). Next.js middleware runs on the Edge Runtime, geographically distributed, executes before the request is even routed to a page/Route Handler (not interleaved with them), and is restricted to Web APIs only — no Node-specific packages, no direct DB drivers in most cases. It's also single-file and matcher-config-driven (one middleware.ts, scoped via a matcher array or config export) rather than Express's chain of many discrete app.use() calls. The practical consequence: Next.js middleware is meant for fast, stateless gating logic — not a place to reimplement a full Express-style middleware chain.",
+        a_hi: "Express middleware ek long-lived Node process ke andar chalta hai, full Node runtime access karta hai, aur tumhare routes ke saath directly request-handling pipeline mein baitha hota hai (app.use(authMiddleware)). Next.js middleware Edge Runtime pe chalta hai, geographically distributed, request page/Route Handler pe route hone se pehle hi execute hota hai (unke saath interleaved nahi), aur sirf Web APIs tak restricted hai — zyaadatar mein Node-specific packages nahi, direct DB drivers nahi. Ye single-file aur matcher-config-driven bhi hai (ek middleware.ts, matcher array ya config export se scoped), Express ke bahut saare discrete app.use() calls ki chain jaisa nahi. Practical consequence: Next.js middleware fast, stateless gating logic ke liye hai — poori Express-style middleware chain reimplement karne ki jagah nahi.",
+      },
+    ],
+  },
+
+  {
+    id: "nextjs-perf", label: "Next.js Performance & Production", icon: "🚀", color: "#FBBF24", section: "Next.js",
+    def_en: "Production-facing optimizations — next/image and next/font, Core Web Vitals, bundle-size reduction, static export, deployment trade-offs (Vercel vs self-hosted), Turbopack, and i18n.",
+    def_hi: "Production-facing optimizations — next/image aur next/font, Core Web Vitals, bundle-size reduction, static export, deployment trade-offs (Vercel vs self-hosted), Turbopack, aur i18n.",
+    questions: [
+      {
+        q: "How does next/image automatic optimization actually work?",
+        a_en: "<Image> doesn't just render an <img> tag — at request time (or build time for static images), Next.js resizes the source image to the exact dimensions needed for the current viewport/device (via srcset), converts it to a modern format (WebP/AVIF) when the browser supports it, lazy-loads by default (images off-screen don't load until they approach the viewport), and requires explicit width/height (or fill) specifically to prevent layout shift — the browser can reserve the correct space before the image loads, directly improving CLS. Optimized images are cached (on Vercel, at the CDN edge) so the resize cost is paid once per unique size/format combination, not per request.",
+        a_hi: "<Image> sirf ek <img> tag render nahi karta — request time pe (ya static images ke liye build time pe), Next.js source image ko current viewport/device ke liye exact dimensions mein resize karta hai (srcset se), browser support karta ho toh modern format (WebP/AVIF) mein convert karta hai, default mein lazy-load karta hai (off-screen images tab tak load nahi hoti jab tak viewport ke paas na aayein), aur specifically layout shift rokne ke liye explicit width/height (ya fill) maangta hai — browser image load hone se pehle hi sahi space reserve kar leta hai, jisse CLS directly improve hoti hai. Optimized images cache hoti hain (Vercel pe CDN edge pe) taaki resize cost sirf ek baar per unique size/format combination pe lage, har request pe nahi.",
+      },
+      {
+        q: "How does next/font eliminate layout shift from web fonts?",
+        a_en: "Traditional web font loading (a <link> to Google Fonts) causes FOUT/FOIT (flash of unstyled/invisible text) and layout shift once the custom font swaps in and reflows text at a different size/width. next/font downloads the font files at build time and self-hosts them alongside your other static assets — no runtime request to an external font provider at all (a genuine privacy/performance win, since the browser never contacts Google's servers). It also auto-generates size-adjust CSS descriptors that make the fallback system font metrically match the custom font's dimensions, so even before the real font loads, the reserved space is already correct — meaningfully improving CLS scores.",
+        a_hi: "Traditional web font loading (Google Fonts ka <link>) FOUT/FOIT (flash of unstyled/invisible text) aur layout shift cause karta hai jab custom font swap hoke text ko alag size/width mein reflow karta hai. next/font build time pe font files download karke unhe tumhare baaki static assets ke saath self-host kar deta hai — external font provider ko koi runtime request hi nahi jaati (genuine privacy/performance win, kyunki browser Google ke servers se kabhi contact hi nahi karta). Ye size-adjust CSS descriptors bhi auto-generate karta hai jo fallback system font ko custom font ke dimensions se metrically match kara dete hain, isliye real font load hone se pehle hi reserved space sahi hota hai — CLS scores meaningfully improve karta hai.",
+      },
+      {
+        q: "What are Core Web Vitals, and how does Next.js help improve them?",
+        a_en: "LCP (Largest Contentful Paint — how fast the main content appears): improved by SSG/ISR (HTML ready immediately), next/image priority loading for above-the-fold images, and streaming so the shell paints fast. CLS (Cumulative Layout Shift — visual stability): improved by next/image's enforced dimensions and next/font's fallback-matching. INP (Interaction to Next Paint, replaced FID — responsiveness to input): improved by smaller client bundles (Server Components ship less JS) and code-splitting so the main thread isn't blocked by unnecessary hydration work. These aren't automatic just because you used Next.js — they're enabled by using its features correctly (choosing the right rendering mode, actually using next/image/next/font), and a poorly built Next.js app can still score badly.",
+        a_hi: "LCP (Largest Contentful Paint — main content kitni jaldi dikhta hai): SSG/ISR se improve hota hai (HTML turant ready), above-the-fold images ke liye next/image priority loading se, aur streaming se jisse shell jaldi paint ho. CLS (Cumulative Layout Shift — visual stability): next/image ki enforced dimensions aur next/font ki fallback-matching se improve hoti hai. INP (Interaction to Next Paint, FID ki jagah — input pe responsiveness): chhote client bundles (Server Components kam JS bhejte hain) aur code-splitting se improve hota hai taaki main thread unnecessary hydration work se block na ho. Ye sab sirf Next.js use karne se automatic nahi ho jaata — ye tabhi enable hota hai jab uske features sahi se use karo (sahi rendering mode choose karna, actually next/image/next/font use karna), aur ek badly-built Next.js app fir bhi kharab score kar sakta hai.",
+      },
+      {
+        q: "How do you analyze and reduce bundle size in a Next.js app?",
+        a_en: "@next/bundle-analyzer (wraps the build output in a visual treemap) is the standard first step — it shows exactly which dependencies are contributing the most bytes. From there: move non-essential heavy libraries behind next/dynamic with ssr: false so they don't block initial render or ship in the main bundle; audit for accidentally importing an entire library when only one function is needed (e.g. import _ from 'lodash' vs import debounce from 'lodash/debounce'); and push logic into Server Components wherever it doesn't need interactivity, since Server Component code never ships to the client at all — the single biggest bundle-size lever in App Router apps is simply not marking things 'use client' unless they need to be.",
+        a_hi: "@next/bundle-analyzer (build output ko visual treemap mein wrap karta hai) standard first step hai — exactly dikhata hai konsi dependencies sabse zyaada bytes contribute kar rahi hain. Uske baad: non-essential heavy libraries ko next/dynamic ke andar ssr: false ke saath rakho taaki wo initial render block na karein ya main bundle mein na ship hon; check karo kahin poori library accidentally import toh nahi ho rahi jab sirf ek function chahiye (jaise import _ from 'lodash' vs import debounce from 'lodash/debounce'); aur jahan interactivity ki zaroorat nahi wahan logic ko Server Components mein push karo, kyunki Server Component code client ko kabhi ship hi nahi hota — App Router apps mein sabse bada bundle-size lever bas ye hai ki jab tak zaroorat na ho tab tak cheezon ko 'use client' mark hi mat karo.",
+      },
+      {
+        q: "output: 'export' (static export) — what does it do, and what are its limitations?",
+        a_en: "It produces a fully static site (plain HTML/CSS/JS files, no Node server needed at runtime) — deployable to any static host (S3, GitHub Pages, Netlify's static tier) rather than requiring a Next.js-aware server. The trade-off: everything must be statically determinable at build time — no SSR, no Route Handlers with dynamic logic, no Server Actions, no Image Optimization API (unless you configure an external loader), and middleware.ts doesn't run. It's the right choice for a genuinely static site (docs, marketing) where you specifically want to avoid running any server infrastructure — but it forfeits most of what makes App Router distinctive, so it's worth explaining why you'd choose it over ISR (answer: zero server cost/infrastructure, not performance — ISR is often just as fast while keeping dynamic capability available).",
+        a_hi: "Ye ek fully static site produce karta hai (plain HTML/CSS/JS files, runtime pe Node server ki zaroorat nahi) — kisi bhi static host (S3, GitHub Pages, Netlify ka static tier) pe deploy ho sakta hai, Next.js-aware server ki zaroorat nahi. Trade-off: sab kuch build time pe statically determinable hona chahiye — SSR nahi, dynamic logic waale Route Handlers nahi, Server Actions nahi, Image Optimization API nahi (jab tak external loader configure na karo), aur middleware.ts run nahi hota. Ye genuinely static site (docs, marketing) ke liye sahi choice hai jahan specifically koi server infrastructure hi nahi chalana — but App Router ki khaasiyat ka zyaadatar hissa iske saath chhut jaata hai, isliye ISR ke upar ise choose karne ki wajah samjha sako (answer: zero server cost/infrastructure, performance nahi — ISR aksar utna hi fast hota hai dynamic capability ke saath).",
+      },
+      {
+        q: "Vercel vs self-hosted (Node server) vs Docker deployment — trade-offs.",
+        a_en: "Vercel (built by the Next.js team) gives you zero-config ISR, Edge Middleware, Image Optimization, and automatic per-route serverless/edge function splitting — the framework's more advanced caching/revalidation features are most seamless there since the platform and framework are co-designed. Self-hosting with next start on a plain Node server gives full control and no vendor lock-in, but you're responsible for implementing equivalent CDN caching, and some features (like on-demand ISR at true CDN-edge speed) need to be approximated manually (e.g. with a reverse proxy/CDN in front). Docker is common for self-hosting in a containerized/Kubernetes environment — next build supports a 'standalone' output mode specifically to produce a minimal, self-contained server bundle for exactly this. Next.js isn't Vercel-locked at a technical level, but some of its most-marketed caching behavior is easiest to get for free there — self-hosting means understanding and replicating that yourself.",
+        a_hi: "Vercel (Next.js team ne khud banaya) zero-config ISR, Edge Middleware, Image Optimization, aur automatic per-route serverless/edge function splitting deta hai — framework ke advanced caching/revalidation features wahan sabse seamless hain kyunki platform aur framework saath design hue hain. Plain Node server pe next start se self-hosting full control aur no vendor lock-in deta hai, but equivalent CDN caching implement karne ki zimmedari tumhari hoti hai, aur kuch features (jaise true CDN-edge speed pe on-demand ISR) manually approximate karne padte hain (jaise ek reverse proxy/CDN aage laga ke). Containerized/Kubernetes environment mein self-hosting ke liye Docker common hai — next build ka 'standalone' output mode exactly isi ke liye ek minimal, self-contained server bundle banata hai. Next.js technically Vercel-locked nahi hai, but iska sabse marketed caching behavior wahan free mein sabse aasan milta hai — self-hosting ka matlab hai wo khud samajhna aur replicate karna.",
+      },
+      {
+        q: "What is Turbopack, and how does it differ from Webpack in the Next.js build pipeline?",
+        a_en: "Turbopack is a Rust-based bundler (built by the Next.js/Vercel team as Webpack's eventual successor) designed around incremental, function-level caching — rather than re-bundling affected modules broadly on a change, it caches computation at a much finer grain so subsequent builds/HMR updates are dramatically faster, especially on large codebases. It's used via next dev --turbo (and increasingly for production builds) as an opt-in/gradually-stabilizing replacement for Webpack, aiming for compatibility with the existing Webpack loader/plugin ecosystem rather than requiring a rewrite of build config. It's primarily a dev-experience/build-speed play, not a change to Next.js's runtime rendering behavior — SSR/SSG/ISR work identically regardless of which bundler produced the JS.",
+        a_hi: "Turbopack ek Rust-based bundler hai (Next.js/Vercel team ne Webpack ke eventual successor ke roop mein banaya) jo incremental, function-level caching ke around design hua hai — change hone pe broadly affected modules re-bundle karne ke bajaye, ye computation ko bahut finer grain pe cache karta hai taaki subsequent builds/HMR updates dramatically faster hon, especially bade codebases pe. Ye next dev --turbo se use hota hai (aur increasingly production builds ke liye bhi) as an opt-in/gradually-stabilizing Webpack replacement, existing Webpack loader/plugin ecosystem ke saath compatibility ka target rakhte hue, build config rewrite karne ki zaroorat ke bina. Ye primarily ek dev-experience/build-speed play hai, Next.js ke runtime rendering behavior mein koi change nahi — SSR/SSG/ISR bilkul same kaam karte hain chahe JS konsa bhi bundler bana raha ho.",
+      },
+      {
+        q: "How do you implement internationalization (i18n) in the App Router?",
+        a_en: "App Router removed the built-in i18n config object that Pages Router had — i18n routing is now typically implemented manually: a [locale] dynamic segment at the root of app/ (app/[locale]/page.tsx), middleware that detects the user's preferred locale (via Accept-Language header or a cookie) and redirects/rewrites to the correct /en/... or /fr/... path, and a locale-aware layout.js that loads the right translation dictionary and sets lang on <html>. Libraries like next-intl wrap this pattern (locale-scoped routing, translation loading, formatting helpers) rather than reinventing it — worth naming one if asked, but understanding the underlying [locale] segment + middleware mechanism is the substance of the answer.",
+        a_hi: "App Router ne wo built-in i18n config object hata diya jo Pages Router mein tha — ab i18n routing typically manually implement hoti hai: app/ ke root pe ek [locale] dynamic segment (app/[locale]/page.tsx), middleware jo user ki preferred locale detect kare (Accept-Language header ya cookie se) aur sahi /en/... ya /fr/... path pe redirect/rewrite kare, aur ek locale-aware layout.js jo sahi translation dictionary load kare aur <html> pe lang set kare. next-intl jaisi libraries is pattern ko wrap karti hain (locale-scoped routing, translation loading, formatting helpers) reinvent karne ke bajaye — poochhe jaane pe ek naam le sakte ho, but underlying [locale] segment + middleware mechanism samajhna hi jawab ka asli hissa hai.",
+      },
+      {
+        q: "Interview scenario: how would you decide between SSR, SSG, ISR, or CSR for a given page? Give a decision framework.",
+        a_en: "Walk it as a sequence of questions, not a memorized rule: (1) Does this page need to be indexed by search engines / shared with a rich preview? If yes, rule out pure CSR. (2) Is the content the same for every visitor, or does it vary per-user/per-request? Same-for-everyone → static (SSG/ISR). Per-user (a personalized dashboard, an authenticated account page) → SSR, or CSR behind auth if SEO doesn't matter for it at all. (3) If static, how often does the underlying data change? Rarely (docs, marketing) → SSG. Periodically (product listings, articles) → ISR with a revalidate tuned to how stale you can tolerate, or on-demand revalidation triggered by the actual mutation (e.g. a CMS webhook calling revalidateTag). (4) Is there a highly interactive sub-section that doesn't need to be part of the initial render? Keep the page's shell static/server-rendered, and carve out just that interactive piece as a Client Component rather than making the whole page CSR. Stating it as a framework like this — rather than jumping straight to an answer — is exactly what signals experience-level thinking in a live interview, since real pages are rarely 100% one strategy; most production pages in App Router mix a server-rendered shell with a few targeted Client Component islands.",
+        a_hi: "Isko questions ki sequence ki tarah socho, memorized rule ki tarah nahi: (1) Kya ye page search engines mein index hona chahiye / rich preview ke saath share hona chahiye? Haan toh pure CSR rule out karo. (2) Kya content har visitor ke liye same hai, ya per-user/per-request vary karta hai? Sabke liye same → static (SSG/ISR). Per-user (personalized dashboard, authenticated account page) → SSR, ya agar SEO matter hi nahi karta toh auth ke piche CSR. (3) Agar static hai, toh underlying data kitni baar change hota hai? Rarely (docs, marketing) → SSG. Periodically (product listings, articles) → ISR jiska revalidate tune ho ke tum kitna stale tolerate kar sakte ho, ya actual mutation se trigger hone waali on-demand revalidation (jaise CMS webhook revalidateTag call kare). (4) Kya koi highly interactive sub-section hai jo initial render ka hissa hone ki zaroorat nahi? Page ke shell ko static/server-rendered rehne do, aur sirf us interactive piece ko Client Component ke roop mein carve out karo, poore page ko CSR banane ke bajaye. Isko ek framework ki tarah bolna — seedha jawab pe kudne ke bajaye — yehi hai jo live interview mein experience-level thinking signal karta hai, kyunki real pages kabhi 100% ek strategy nahi hote; App Router mein zyaadatar production pages ek server-rendered shell ko kuch targeted Client Component islands ke saath mix karte hain.",
+      },
+    ],
+  },
 ];
+
+const CATEGORIES = [...CATEGORIES_BASE, ...NODE_THEORY_CATEGORIES];
 
 const TOTAL = CATEGORIES.reduce((s, c) => s + c.questions.length, 0);
 
@@ -6446,57 +6742,106 @@ function getPageNumbers(current, total) {
 const SECTION_META = {
   JavaScript: { label: "JS", color: "#F7DF1E" },
   React: { label: "REACT", color: "#61DAFB" },
+  "Next.js": { label: "NEXT.JS", color: "#FFFFFF" },
   CSS: { label: "CSS", color: "#2965F1" },
   TypeScript: { label: "TS", color: "#8B5CF6" },
+  "Node.js": { label: "NODE.JS", color: "#68A063" },
   Browser: { label: "WEB & SEC", color: "#FB7185" },
   Performance: { label: "PERF", color: "#34D399" },
   Tools: { label: "GIT & TOOLS", color: "#F97316" },
   Design: { label: "DESIGN", color: "#EC4899" },
 };
-const SECTION_ORDER = ["JavaScript", "React", "CSS", "TypeScript", "Browser", "Performance", "Tools", "Design"];
+const SECTION_ORDER = ["JavaScript", "React", "Next.js", "CSS", "TypeScript", "Node.js", "Browser", "Performance", "Tools", "Design"];
 const SECTIONS = SECTION_ORDER
   .map(name => ({ name, ...SECTION_META[name], cats: CATEGORIES.filter(c => c.section === name) }))
   .filter(s => s.cats.length > 0);
 
-const TabRow = ({ cats, label, labelColor, activeCat, reviewed, switchCat }) => (
-  <div style={{ display: "flex", alignItems: "stretch", borderBottom: "1px solid #111120" }}>
-    <div style={{
-      writingMode: "vertical-rl", textOrientation: "mixed",
-      fontFamily: "'Manrope', sans-serif", fontSize: 9, letterSpacing: 3,
-      color: labelColor, textTransform: "uppercase",
-      padding: "6px 6px 6px 8px",
-      borderRight: `1px solid ${labelColor}22`,
-      background: `${labelColor}08`,
-      display: "flex", alignItems: "center",
-    }}>{label}</div>
-    <div className="no-scrollbar" style={{ display: "flex", overflowX: "auto", flex: 1 }}>
-      {cats.map(c => {
-        const isActive = activeCat === c.id;
-        const done = c.questions.filter((_, i) => reviewed[`${c.id}-${i}`]).length;
-        return (
-          <button key={c.id} onClick={() => switchCat(c.id)} style={{
-            background: "none", border: "none",
-            borderBottom: isActive ? `2px solid ${c.color}` : "2px solid transparent",
-            padding: "8px 10px 6px",
-            cursor: "pointer", color: isActive ? c.color : "#3a3a5a",
-            fontFamily: "'Manrope', sans-serif", fontSize: 10, letterSpacing: 1,
-            textTransform: "uppercase", whiteSpace: "nowrap",
-            transition: "all 0.2s",
-            display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
-            marginBottom: -1,
-          }}>
-            <span style={{ fontSize: 14 }}>{c.icon}</span>
-            <span>{c.label}</span>
-            <span style={{
-              fontSize: 9,
-              color: done === c.questions.length && done > 0 ? c.color : "#222240",
-            }}>{done}/{c.questions.length}</span>
-          </button>
-        );
-      })}
+const TabRow = ({ cats, label, labelColor, activeCat, reviewed, switchCat }) => {
+  const scrollRef = useRef(null);
+  const drag = useRef({ down: false, startX: 0, startScroll: 0, moved: 0 });
+
+  const onPointerDown = (e) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    drag.current.down = true;
+    drag.current.startX = e.pageX;
+    drag.current.startScroll = el.scrollLeft;
+    drag.current.moved = 0;
+    el.style.cursor = "grabbing";
+  };
+
+  const onPointerMove = (e) => {
+    const el = scrollRef.current;
+    if (!el || !drag.current.down) return;
+    const dx = e.pageX - drag.current.startX;
+    drag.current.moved = Math.max(drag.current.moved, Math.abs(dx));
+    el.scrollLeft = drag.current.startScroll - dx;
+  };
+
+  const endDrag = () => {
+    const el = scrollRef.current;
+    if (el) el.style.cursor = "grab";
+    drag.current.down = false;
+  };
+
+  const onCatClick = (id) => {
+    if (drag.current.moved > 6) return;
+    switchCat(id);
+  };
+
+  return (
+    <div style={{ display: "flex", alignItems: "stretch", borderBottom: "1px solid #111120" }}>
+      <div style={{
+        writingMode: "vertical-rl", textOrientation: "mixed",
+        fontFamily: "'Manrope', sans-serif", fontSize: 9, letterSpacing: 3,
+        color: labelColor, textTransform: "uppercase",
+        padding: "6px 6px 6px 8px",
+        borderRight: `1px solid ${labelColor}22`,
+        background: `${labelColor}08`,
+        display: "flex", alignItems: "center",
+      }}>{label}</div>
+      <div
+        ref={scrollRef}
+        className="no-scrollbar"
+        onMouseDown={onPointerDown}
+        onMouseMove={onPointerMove}
+        onMouseUp={endDrag}
+        onMouseLeave={endDrag}
+        style={{ display: "flex", overflowX: "auto", flex: 1, cursor: "grab", userSelect: "none" }}
+      >
+        {cats.map(c => {
+          const isActive = activeCat === c.id;
+          const done = c.questions.filter((_, i) => reviewed[`${c.id}-${i}`]).length;
+          return (
+            <button key={c.id} onClick={() => onCatClick(c.id)} style={{
+              position: "relative",
+              background: isActive ? `${c.color}16` : "none",
+              border: isActive ? `1px solid ${c.color}55` : "1px solid transparent",
+              borderBottom: isActive ? `1px solid ${c.color}16` : "1px solid transparent",
+              borderRadius: "10px 10px 0 0",
+              padding: "8px 12px 7px",
+              cursor: "pointer", color: isActive ? c.color : "#3a3a5a",
+              fontFamily: "'Manrope', sans-serif", fontSize: 10, letterSpacing: 1,
+              textTransform: "uppercase", whiteSpace: "nowrap",
+              transition: "all 0.2s",
+              display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
+              marginBottom: -1,
+              flexShrink: 0,
+              zIndex: isActive ? 2 : 1,
+            }}>
+              <span style={{ fontSize: 14 }}>{c.icon}</span>
+              <span>{c.label}</span>
+              <span style={{
+                fontSize: 9,
+                color: done === c.questions.length && done > 0 ? c.color : "#222240",
+              }}>{done}/{c.questions.length}</span>
+            </button>
+          );
+        })}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 export default function App() {
   const [activeCat, setActiveCat] = useState(() => loadLastCategory("js-core"));
@@ -6505,7 +6850,7 @@ export default function App() {
   const [reviewed, setReviewed] = useState(loadReviewed);
   const [lang, setLang] = useState("both");
   const [mode, setMode] = useState("theory");
-  const [showAll, setShowAll] = useState(false);
+  const [showAll, setShowAll] = useState(true);
   const [sectionFilter, setSectionFilter] = useState(null);
   const [page, setPage] = useState(1);
   const [openSection, setOpenSection] = useState(null);
@@ -6552,7 +6897,7 @@ export default function App() {
     } catch { /* storage unavailable/full — progress just won't persist */ }
   }, [reviewed, activeCat]);
 
-  const switchCat = (id) => { setActiveCat(id); setShowAll(false); setSectionFilter(null); setOpenIdx(null); setSearch(""); setPage(1); setOpenSection(null); };
+  const switchCat = (id) => { setActiveCat(id); setShowAll(false); setSectionFilter(null); setOpenIdx(null); setSearch(""); setPage(1); };
   const toggleReviewed = (key, e) => {
     e.stopPropagation();
     setReviewed(p => { const n = { ...p }; n[key] ? delete n[key] : (n[key] = true); return n; });
@@ -6878,7 +7223,7 @@ export default function App() {
                     }}>{item.catIcon} {item.catLabel}</span>
                   )}
                   <span style={{
-                    flex: 1, fontSize: 15, lineHeight: 1.5,
+                    flex: 1, fontSize: 15, lineHeight: 1.5, textAlign: "left",
                     color: isDone ? "#5a8a5a" : isOpen ? "#eee" : "#aaa8a2",
                     transition: "color 0.2s",
                   }}>{item.q}</span>
@@ -6896,7 +7241,7 @@ export default function App() {
                         <div style={{ fontFamily: "'Manrope', sans-serif", fontSize: 8, letterSpacing: 3, color: "#666", textTransform: "uppercase", marginBottom: 6 }}>
                           🇬🇧 English
                         </div>
-                        <p style={{ margin: 0, fontSize: 14, lineHeight: 1.8, color: "#8e8a82" }}>
+                        <p style={{ margin: 0, fontSize: 14, lineHeight: 1.8, color: "#8e8a82", textAlign: "left" }}>
                           {item.a_en}
                         </p>
                       </div>
@@ -6906,7 +7251,7 @@ export default function App() {
                         <div style={{ fontFamily: "'Manrope', sans-serif", fontSize: 8, letterSpacing: 3, color: "#666", textTransform: "uppercase", marginBottom: 6 }}>
                           🇮🇳 Hinglish
                         </div>
-                        <p style={{ margin: 0, fontSize: 14, lineHeight: 1.8, color: "#8e8a82" }}>
+                        <p style={{ margin: 0, fontSize: 14, lineHeight: 1.8, color: "#8e8a82", textAlign: "left" }}>
                           {item.a_hi}
                         </p>
                       </div>
@@ -6917,17 +7262,21 @@ export default function App() {
                           💻 Example
                         </div>
                         <pre style={{
+                          display: "inline-block",
+                          maxWidth: "100%",
+                          boxSizing: "border-box",
                           background: "#050510",
                           border: "1px solid #1a1a2e",
                           borderRadius: 8,
                           padding: "14px 16px",
-                          margin: 0,
+                          margin: "0 auto",
                           fontFamily: "'Manrope', sans-serif",
                           fontSize: 13,
                           lineHeight: 1.6,
                           color: "#c9d1d9",
                           overflowX: "auto",
                           whiteSpace: "pre",
+                          textAlign: "left",
                         }}>
                           <code>{item.code}</code>
                         </pre>
