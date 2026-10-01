@@ -286,7 +286,8 @@ function CounterApp() {
     example: "Child has an input + button\nOn click => sends value up to Parent\nParent displays the received value",
     type: "react",
     component: "ChildToParent",
-    code: `import { useState } from "react";
+    code: `// Child.jsx
+import { useState } from "react";
 
 function Child({ onSend }) {
   const [input, setInput] = useState("");
@@ -297,6 +298,14 @@ function Child({ onSend }) {
     </div>
   );
 }
+
+export default Child;
+
+// ──────────────────────────────────────────────────────
+
+// Parent.jsx (usage — different file, imports Child above)
+import { useState } from "react";
+import Child from "./Child";
 
 function Parent() {
   const [received, setReceived] = useState("");
@@ -316,7 +325,8 @@ function Parent() {
     example: "ThemeContext provides: theme, toggleTheme\nConsumer reads theme and applies styles\nButton toggles Dark <=> Light",
     type: "react",
     component: "ThemeToggle",
-    code: `import { useState, useContext, createContext } from "react";
+    code: `// ThemeContext.jsx
+import { useState, createContext } from "react";
 
 const ThemeContext = createContext();
 
@@ -329,6 +339,14 @@ function ThemeProvider({ children }) {
     </ThemeContext.Provider>
   );
 }
+
+export { ThemeContext, ThemeProvider };
+
+// ──────────────────────────────────────────────────────
+
+// ThemedBox.jsx (different file, consumes the context above)
+import { useContext } from "react";
+import { ThemeContext } from "./ThemeContext";
 
 function ThemedBox() {
   const { theme, toggleTheme } = useContext(ThemeContext);
@@ -346,6 +364,14 @@ function ThemedBox() {
     </div>
   );
 }
+
+export default ThemedBox;
+
+// ──────────────────────────────────────────────────────
+
+// App.jsx (usage — different file, wires Provider + consumer together)
+import { ThemeProvider } from "./ThemeContext";
+import ThemedBox from "./ThemedBox";
 
 function App() {
   return (
@@ -452,6 +478,233 @@ function Stopwatch() {
     </div>
   );
 }`,
+  },
+  {
+    id: 44,
+    category: "React",
+    title: "Write a custom hook — useFetch",
+    description: "Build a reusable useFetch(url) hook that handles loading/error/data state, then use it from a separate component file.",
+    example: `const { data, loading, error } = useFetch("https://dummyjson.com/products");`,
+    type: "react",
+    component: "UseFetchDemo",
+    code: `// useFetch.js
+import { useEffect, useState } from "react";
+
+function useFetch(url) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+
+        const response = await fetch(url);
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch data");
+        }
+
+        const result = await response.json();
+        setData(result);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [url]);
+
+  return { data, loading, error };
+}
+
+export default useFetch;
+
+// ──────────────────────────────────────────────────────
+
+// App.jsx (usage — different file, imports the hook above)
+import useFetch from "./useFetch";
+
+function App() {
+  const { data, loading, error } = useFetch(
+    "https://dummyjson.com/products"
+  );
+
+  if (loading) return <h2>Loading...</h2>;
+  if (error) return <h2>{error}</h2>;
+
+  return (
+    <div>
+      {data?.products?.map((product) => (
+        <p key={product.id}>{product.title}</p>
+      ))}
+    </div>
+  );
+}`,
+  },
+  {
+    id: 45,
+    category: "React",
+    title: "Real-time character frequency counter",
+    description: "Build an input field that recalculates the frequency of every typed character on each keystroke and renders it live.",
+    example: `Input: "aab"\nOutput: a: 2, b: 1  (updates on every keystroke)`,
+    type: "react",
+    component: "FrequencyCounter",
+    code: `import { useState } from "react";
+
+function FrequencyCounter() {
+  const [text, setText] = useState("");
+  const [frequency, setFrequency] = useState({});
+
+  const handleChange = (e) => {
+    const value = e.target.value;
+
+    setText(value);
+
+    const freq = {};
+
+    for (const char of value) {
+      if (char !== " ") {
+        freq[char] = (freq[char] || 0) + 1;
+      }
+    }
+
+    setFrequency(freq);
+  };
+
+  return (
+    <div>
+      <input
+        type="text"
+        value={text}
+        onChange={handleChange}
+        placeholder="Type something..."
+      />
+
+      <h3>Frequency</h3>
+
+      {Object.entries(frequency).map(([char, count]) => (
+        <p key={char}>
+          {char}: {count}
+        </p>
+      ))}
+    </div>
+  );
+}
+
+export default FrequencyCounter;`,
+  },
+  {
+    id: 46,
+    category: "String",
+    title: "Sort a string in alphabetical order (selection sort)",
+    description: "Given an input string, return a new string with all its characters arranged in alphabetical order.",
+    example: `Input:  "react"\nOutput: "aectr"`,
+    type: "dual",
+    code1: `const str = "react";
+
+const result = str.split("").sort().join("");
+
+console.log(result);`,
+    code2: `const str = "react";
+const arr = str.split("");
+
+for (let i = 0; i < arr.length; i++) {
+  for (let j = i + 1; j < arr.length; j++) {
+    if (arr[i] > arr[j]) {
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+  }
+}
+
+console.log(arr.join(""));`,
+  },
+  {
+    id: 47,
+    category: "String",
+    title: "Total count of a given string",
+    description: "Given a string, find its total character count — once using the built-in length property, and once by counting every character's own frequency.",
+    example: `Input:  "react"\nOutput: Total length = 5\n        Frequency = { r:1, e:1, a:1, c:1, t:1 }`,
+    type: "dual",
+    code1: `const str = "react";
+
+console.log(str.length);`,
+    code2: `const str = "react";
+
+const count = {};
+
+for (const char of str) {
+  count[char] = (count[char] || 0) + 1;
+}
+
+console.log(count);`,
+  },
+  {
+    id: 48,
+    category: "String",
+    title: "Length of the longest substring without repeating characters",
+    description: "Given a string, find the length of the longest substring that has no repeating characters, using the sliding window technique. Bonus: return the substring itself too, not just its length.",
+    example: `Input:  "abcabcbb"\nOutput (length only): 3\nOutput (substring + length): { substring: "abc", length: 3 }`,
+    type: "logic",
+    code1: `// Step 1 — basic version: returns only the length
+function longestSubstring(str) {
+  let set = new Set();
+  let left = 0;
+  let maxLength = 0;
+
+  for (let right = 0; right < str.length; right++) {
+
+    while (set.has(str[right])) {
+      set.delete(str[left]);
+      left++;
+    }
+
+    set.add(str[right]);
+
+    maxLength = Math.max(maxLength, right - left + 1);
+  }
+
+  return maxLength;
+}
+
+console.log(longestSubstring("abcabcbb"));
+
+// ──────────────────────────────────────────────────────
+
+// Step 2 — same sliding window, extended to also return the substring itself
+function longestSubstringWithValue(str) {
+  let set = new Set();
+  let left = 0;
+
+  let maxLength = 0;
+  let longest = "";
+
+  for (let right = 0; right < str.length; right++) {
+    while (set.has(str[right])) {
+      set.delete(str[left]);
+      left++;
+    }
+
+    set.add(str[right]);
+
+    const currentLength = right - left + 1;
+
+    if (currentLength > maxLength) {
+      maxLength = currentLength;
+      longest = str.slice(left, right + 1);
+    }
+  }
+
+  return {
+    substring: longest,
+    length: maxLength
+  };
+}
+
+console.log(longestSubstringWithValue("abcabcbb"));`,
   },
   {
     id: 25,
@@ -1236,6 +1489,66 @@ console.log(JSON.stringify(reverseNested([1, [2, 3], [4, [5, 6]]])));`,
 
 console.log(JSON.stringify(reverseNested([1, [2, 3], [4, [5, 6]]])));`,
   },
+  {
+    id: 43,
+    category: "Array",
+    title: "Flatten a nested array and find all prime numbers",
+    description: "Given an array nested to an arbitrary depth, flatten it into a single array and then return only the prime numbers from it.",
+    example: `Input:  [1, 2, 3, 4, [5, 6, 7, 8, 9, 23, [34, 35, 64, 23]]]
+Output: [2, 3, 5, 7, 23, 23]`,
+    type: "dual",
+    code1: `const arr = [1, 2, 3, 4, [5, 6, 7, 8, 9, 23, [34, 35, 64, 23]]];
+
+// Flatten array
+const flatArray = arr.flat(Infinity);
+
+// Check prime
+const isPrime = (num) => {
+  if (num < 2) return false;
+
+  for (let i = 2; i <= Math.sqrt(num); i++) {
+    if (num % i === 0) return false;
+  }
+
+  return true;
+};
+
+// Find prime numbers
+const primes = flatArray.filter(isPrime);
+
+console.log(flatArray);
+console.log(primes);`,
+    code2: `const arr = [1, 2, 3, 4, [5, 6, 7, 8, 9, 23, [34, 35, 64, 23]]];
+
+function flatten(arr) {
+  let result = [];
+
+  for (let item of arr) {
+    if (Array.isArray(item)) {
+      result = result.concat(flatten(item));
+    } else {
+      result.push(item);
+    }
+  }
+
+  return result;
+}
+
+const flatArray = flatten(arr);
+
+const primes = flatArray.filter((num) => {
+  if (num < 2) return false;
+
+  for (let i = 2; i <= Math.sqrt(num); i++) {
+    if (num % i === 0) return false;
+  }
+
+  return true;
+});
+
+console.log(flatArray);
+console.log(primes);`,
+  },
 ];
 
 const CATEGORY_COLORS = {
@@ -1660,24 +1973,130 @@ function ProgressBar() {
   );
 }
 
+function useFetch(url) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response = await fetch(url);
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch data");
+        }
+
+        const result = await response.json();
+        setData(result);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [url]);
+
+  return { data, loading, error };
+}
+
+function UseFetchDemo() {
+  const { data, loading, error } = useFetch("https://dummyjson.com/products?limit=6");
+
+  return (
+    <div style={{ padding: 28 }}>
+      {loading && <p style={{ color: "#aaa8a2" }}>Loading...</p>}
+      {error && <p style={{ color: "#f87171" }}>{error}</p>}
+      {!loading && !error && (
+        <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
+          {data?.products?.map(product => (
+            <li key={product.id} style={{
+              padding: "8px 12px", marginBottom: 6, borderRadius: 8,
+              background: "#0e0e1a", color: "#d8d4cc", fontSize: 14,
+            }}>{product.title}</li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function FrequencyCounter() {
+  const [text, setText] = useState("");
+  const [frequency, setFrequency] = useState({});
+
+  const handleChange = (e) => {
+    const value = e.target.value;
+    setText(value);
+
+    const freq = {};
+    for (const char of value) {
+      if (char !== " ") {
+        freq[char] = (freq[char] || 0) + 1;
+      }
+    }
+    setFrequency(freq);
+  };
+
+  return (
+    <div style={{ padding: 28 }}>
+      <input
+        type="text"
+        value={text}
+        onChange={handleChange}
+        placeholder="Type something..."
+        style={{
+          width: "100%", padding: "10px 14px", borderRadius: 8,
+          border: "1px solid #1a1a2e", background: "#0e0e1a",
+          color: "#d8d4cc", fontSize: 14, marginBottom: 16, boxSizing: "border-box",
+        }}
+      />
+
+      <h3 style={{ fontSize: 14, fontWeight: 600, color: "#aaa8a2", margin: "0 0 10px" }}>Frequency</h3>
+
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+        {Object.entries(frequency).map(([char, count]) => (
+          <span key={char} style={{
+            padding: "6px 10px", borderRadius: 6, background: "#0e0e1a",
+            color: "#7dd3fc", fontSize: 13, fontFamily: "'Manrope', sans-serif",
+          }}>{char}: {count}</span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 const REACT_COMPONENTS = {
   FormValidation, ApiPagination, CounterApp, ChildToParent,
-  ThemeToggle, CountdownTimer, Stopwatch, ProgressBar,
+  ThemeToggle, CountdownTimer, Stopwatch, ProgressBar, UseFetchDemo,
+  FrequencyCounter,
 };
 
 // ── Question Card ─────────────────────────────────────────────────
 
-function QuestionHeader({ q }) {
+function QuestionHeader({ q, expanded, onToggle }) {
   const catStyle = CATEGORY_COLORS[q.category] || CATEGORY_COLORS.Logic;
   const isLogic = q.type === "logic";
   const isReact = q.type === "react";
   return (
-    <div style={{ background: "#0c0c1a", border: "1px solid #1a1a2e", borderRadius: 12, padding: "18px 22px", marginBottom: 14 }}>
+    <div
+      onClick={onToggle}
+      style={{ background: "#0c0c1a", border: "1px solid #1a1a2e", borderRadius: 12, padding: "18px 22px", marginBottom: expanded ? 14 : 0, cursor: "pointer" }}
+    >
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
         <span style={{ fontSize: 12, fontWeight: 500, padding: "3px 9px", borderRadius: 5, background: "rgba(196,181,253,0.12)", color: "#c4b5fd" }}>Q{q.id}</span>
         <span style={{ fontSize: 12, fontWeight: 500, padding: "3px 9px", borderRadius: 5, background: catStyle.bg, color: catStyle.color }}>{q.category}</span>
         {isLogic && <span style={{ fontSize: 12, fontWeight: 500, padding: "3px 9px", borderRadius: 5, background: "rgba(249,168,212,0.12)", color: "#f9a8d4" }}>Logic</span>}
         {isReact && <span style={{ fontSize: 12, fontWeight: 500, padding: "3px 9px", borderRadius: 5, background: "rgba(125,211,252,0.12)", color: "#7dd3fc" }}>Live Demo</span>}
+        <span style={{ marginLeft: "auto", fontSize: 12, fontWeight: 500, color: "#8b8b9a", display: "flex", alignItems: "center", gap: 4 }}>
+          {expanded ? "Hide solution" : "Click to view solution"}
+          <span style={{ display: "inline-block", transition: "transform 0.2s", transform: expanded ? "rotate(180deg)" : "rotate(0deg)" }}>▾</span>
+        </span>
       </div>
       <h2 style={{ fontSize: 19, fontWeight: 600, color: "#eee", margin: "0 0 6px" }}>{q.title}</h2>
       <p style={{ color: "#aaa8a2", fontSize: 15.5, lineHeight: 1.6, margin: 0 }}>{q.description}</p>
@@ -1692,15 +2111,17 @@ function QuestionHeader({ q }) {
 
 function QuestionCard({ q }) {
   const [codes, setCodes] = useState({ code1: q.code1 || "", code2: q.code2 || "" });
+  const [expanded, setExpanded] = useState(false);
   const isLogic = q.type === "logic";
   const isReact = q.type === "react";
   const isTheory = q.type === "theory";
+  const toggle = () => setExpanded(e => !e);
 
   if (isTheory) {
     return (
       <div style={{ marginBottom: 28 }}>
-        <QuestionHeader q={q} />
-        <div style={{ background: "#0c0c1a", border: "1px solid #1a1a2e", borderRadius: 12, overflow: "hidden" }}>
+        <QuestionHeader q={q} expanded={expanded} onToggle={toggle} />
+        {expanded && <div style={{ background: "#0c0c1a", border: "1px solid #1a1a2e", borderRadius: 12, overflow: "hidden" }}>
           <div style={{ padding: "12px 16px", borderBottom: "1px solid #1a1a2e", background: "#0e0e1a", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <span style={{ fontSize: 14, fontWeight: 600, color: "#d8d4cc" }}>Theory & Explanation</span>
             <span style={{ fontSize: 12, padding: "3px 8px", borderRadius: 4, background: "rgba(251,146,60,0.12)", color: "#fb923c", fontWeight: 500 }}>Concept</span>
@@ -1711,7 +2132,7 @@ function QuestionCard({ q }) {
             fontSize: 13.5, lineHeight: 1.65, color: "#c9d1d9", textAlign: "left",
             background: "#0a0a14", whiteSpace: "pre-wrap", wordBreak: "break-word",
           }}>{q.code1}</pre>
-        </div>
+        </div>}
       </div>
     );
   }
@@ -1720,8 +2141,8 @@ function QuestionCard({ q }) {
     const LiveComp = REACT_COMPONENTS[q.component];
     return (
       <div style={{ marginBottom: 28 }}>
-        <QuestionHeader q={q} />
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 16 }}>
+        <QuestionHeader q={q} expanded={expanded} onToggle={toggle} />
+        {expanded && <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 16 }}>
           <div style={{ background: "#0c0c1a", border: "1px solid #1a1a2e", borderRadius: 12, overflow: "hidden" }}>
             <div style={{ padding: "12px 16px", borderBottom: "1px solid #1a1a2e", background: "#0e0e1a", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <span style={{ fontSize: 14, fontWeight: 600, color: "#d8d4cc" }}>Live Demo</span>
@@ -1741,15 +2162,15 @@ function QuestionCard({ q }) {
               background: "#0a0a14", whiteSpace: "pre-wrap", wordBreak: "break-word",
             }}>{q.code}</pre>
           </div>
-        </div>
+        </div>}
       </div>
     );
   }
 
   return (
     <div style={{ marginBottom: 28 }}>
-      <QuestionHeader q={q} />
-      {isLogic ? (
+      <QuestionHeader q={q} expanded={expanded} onToggle={toggle} />
+      {expanded && (isLogic ? (
         <CodePanel
           label="Solution"
           tag="Logic"
@@ -1774,7 +2195,7 @@ function QuestionCard({ q }) {
             onCodeChange={v => setCodes(p => ({ ...p, code2: v }))}
           />
         </div>
-      )}
+      ))}
     </div>
   );
 }
