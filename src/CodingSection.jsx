@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef, useContext, createContext } from "react";
+import { useState, useEffect, useLayoutEffect, useRef, useContext, createContext } from "react";
+import "./CodingSection.css";
 
 const QUESTIONS = [
   {
@@ -8,8 +9,38 @@ const QUESTIONS = [
     description: "Given an input string, return a new string with all its characters arranged in alphabetical order.",
     example: `Input:  "javascript"\nOutput: "aacijprstv"`,
     type: "dual",
-    code1: `function sortString(str) {\n  // Uses split, sort, join\n  return str.split('').sort().join('');\n}\n\n// Test\nconst input = "javascript";\nconsole.log("Input :", input);\nconsole.log("Output:", sortString(input));`,
-    code2: `function sortString(str) {\n  let arr = [];\n  for (let i = 0; i < str.length; i++) arr[i] = str[i];\n\n  // Bubble sort\n  for (let i = 0; i < arr.length - 1; i++) {\n    for (let j = 0; j < arr.length - 1 - i; j++) {\n      if (arr[j] > arr[j + 1]) {\n        let temp = arr[j];\n        arr[j] = arr[j + 1];\n        arr[j + 1] = temp;\n      }\n    }\n  }\n\n  let result = "";\n  for (let i = 0; i < arr.length; i++) result += arr[i];\n  return result;\n}\n\nconst input = "javascript";\nconsole.log("Input :", input);\nconsole.log("Output:", sortString(input));`,
+    code1: `function sortString(str) {
+    // Uses split, sort, join
+    return str.split('').sort().join('');
+}
+
+// Test
+const input = "javascript";
+
+console.log("Input :", input);
+console.log("Output:", sortString(input));`,
+    code2: `function revStr(str) {
+    let result = "";
+    let arr = [];
+    for (let i = 0; i < str.length; i++) {
+        arr[i] = str[i];
+    }
+    for (let i = 0; i < arr.length; i++) {
+        for (let j = 0; j < arr.length - 1 - i; j++) {
+            if (arr[j] > arr[j + 1]) {
+                let temp = arr[j];
+                arr[j] = arr[j + 1];
+                arr[j + 1] = temp;
+            }
+        }
+    }
+    for (let i = 0; i < arr.length; i++) {
+        result += arr[i];
+    }
+    return result;
+}
+
+console.log(revStr("javascript"));`,
   },
   {
     id: 2,
@@ -18,8 +49,26 @@ const QUESTIONS = [
     description: "Given a number, return its digits in reversed order as a number.",
     example: `Input:  12345   =>  Output: 54321\nInput:  -9870   =>  Output: -789`,
     type: "dual",
-    code1: `function reverseNumber(n) {\n  const sign = n < 0 ? -1 : 1;\n  const reversed = Math.abs(n).toString().split('').reverse().join('');\n  return sign * parseInt(reversed, 10);\n}\n\nconsole.log("12345  =>", reverseNumber(12345));\nconsole.log("-9870  =>", reverseNumber(-9870));\nconsole.log("1000   =>", reverseNumber(1000));`,
-    code2: `function reverseNumber(n) {\n  const sign = n < 0 ? -1 : 1;\n  let num = n < 0 ? -n : n;\n  let reversed = 0;\n\n  while (num > 0) {\n    let lastDigit = num % 10;\n    reversed = reversed * 10 + lastDigit;\n    num = (num - lastDigit) / 10;\n  }\n  return sign * reversed;\n}\n\nconsole.log("12345  =>", reverseNumber(12345));\nconsole.log("-9870  =>", reverseNumber(-9870));\nconsole.log("1000   =>", reverseNumber(1000));`,
+    code1: `function reverseNumber(n) {
+    const sign = n < 0 ? -1 : 1;
+    const reversed = Math.abs(n).toString().split('').reverse().join('');
+    return sign * parseInt(reversed, 10);
+}
+
+console.log("12345  =>", reverseNumber(12345));
+console.log("-9870  =>", reverseNumber(-9870));
+console.log("1000   =>", reverseNumber(1000));`,
+    code2: `function revStr(num) {
+    let rev = 0;
+    while (num > 0) {
+        let digit = num % 10;
+        rev = rev * 10 + digit;
+        num = Math.floor(num / 10);
+    }
+    return rev;
+}
+
+console.log(revStr(1234));`,
   },
   {
     id: 3,
@@ -28,8 +77,32 @@ const QUESTIONS = [
     description: "Given an array of numbers, find the second largest element.",
     example: `Input:  [12, 35, 1, 10, 34, 1]\nOutput: 34`,
     type: "dual",
-    code1: `function secondLargest(arr) {\n  const unique = [...new Set(arr)];\n  unique.sort((a, b) => b - a);\n  return unique[1];\n}\n\nconsole.log([12,35,1,10,34,1], "=>", secondLargest([12,35,1,10,34,1]));\nconsole.log([5,5,5],           "=>", secondLargest([5,5,5]));\nconsole.log([10,20],           "=>", secondLargest([10,20]));`,
-    code2: `function secondLargest(arr) {\n  let first = -Infinity, second = -Infinity;\n  for (let i = 0; i < arr.length; i++) {\n    if (arr[i] > first) { second = first; first = arr[i]; }\n    else if (arr[i] > second && arr[i] !== first) second = arr[i];\n  }\n  return second === -Infinity ? undefined : second;\n}\n\nconsole.log([12,35,1,10,34,1], "=>", secondLargest([12,35,1,10,34,1]));\nconsole.log([5,5,5],           "=>", secondLargest([5,5,5]));\nconsole.log([10,20],           "=>", secondLargest([10,20]));`,
+    code1: `function secondLargest(arr) {
+    const unique = [...new Set(arr)];
+    unique.sort((a, b) => b - a);
+    return unique[1];
+}
+
+console.log([12, 35, 1, 10, 34, 1], "=>", secondLargest([12, 35, 1, 10, 34, 1]));
+console.log([5, 5, 5], "=>", secondLargest([5, 5, 5]));
+console.log([10, 20], "=>", secondLargest([10, 20]));`,
+    code2: `function secondLargest(arr) {
+    let first = -Infinity;
+    let second = -Infinity;
+    for (let i = 0; i < arr.length; i++) {
+        if (arr[i] > first) {
+            second = first;
+            first = arr[i];
+        } else if (arr[i] > second && arr[i] !== first) {
+            second = arr[i];
+        }
+    }
+    return second === -Infinity ? undefined : second;
+}
+
+console.log([12, 35, 1, 10, 34, 1], "=>", secondLargest([12, 35, 1, 10, 34, 1]));
+console.log([5, 5, 5], "=>", secondLargest([5, 5, 5]));
+console.log([10, 20], "=>", secondLargest([10, 20]));`,
   },
   {
     id: 4,
@@ -38,8 +111,30 @@ const QUESTIONS = [
     description: "Given a string, return a new string with all duplicate characters removed, keeping only the first occurrence.",
     example: `Input:  "programming"\nOutput: "progamin"`,
     type: "dual",
-    code1: `function removeDuplicates(str) {\n  return [...new Set(str)].join('');\n}\n\nconsole.log("programming  =>", removeDuplicates("programming"));\nconsole.log("aabbccdd     =>", removeDuplicates("aabbccdd"));\nconsole.log("hello world  =>", removeDuplicates("hello world"));`,
-    code2: `function removeDuplicates(str) {\n  let result = "", seen = {};\n  for (let i = 0; i < str.length; i++) {\n    if (!seen[str[i]]) { seen[str[i]] = true; result += str[i]; }\n  }\n  return result;\n}\n\nconsole.log("programming  =>", removeDuplicates("programming"));\nconsole.log("aabbccdd     =>", removeDuplicates("aabbccdd"));\nconsole.log("hello world  =>", removeDuplicates("hello world"));`,
+    code1: `function removeDuplicates(str) {
+    return [...new Set(str)].join('');
+}
+
+console.log("programming  =>", removeDuplicates("programming"));
+console.log("aabbccdd     =>", removeDuplicates("aabbccdd"));
+console.log("hello world  =>", removeDuplicates("hello world"));`,
+    code2: `function revStr(str) {
+    let result = ""
+    for (let i = 0; i < str.length; i++) {
+        let dub = false;
+        for (let j = 0; j < result.length; j++) {
+            if (str[i] === result[j]) {
+                dub = true;
+                break;
+            }
+        } if (!dub) {
+            result += str[i]
+        }
+    }
+    return result
+}
+
+console.log(revStr("javaaasssascript"));`,
   },
   {
     id: 5,
@@ -48,8 +143,29 @@ const QUESTIONS = [
     description: "Given a string, return the frequency count of each character.",
     example: `Input:  "hello"\nOutput: { h:1, e:1, l:2, o:1 }`,
     type: "dual",
-    code1: `function charCount(str) {\n  return str.split('').reduce((acc, char) => {\n    acc[char] = (acc[char] || 0) + 1;\n    return acc;\n  }, {});\n}\n\nconst result = charCount("hello world");\nconsole.log("Input: 'hello world'");\nObject.entries(result).forEach(([char, count]) => {\n  const display = char === ' ' ? 'space' : \`'\${char}'\`;\n  console.log(display + " : " + count);\n});`,
-    code2: `function charCount(str) {\n  let count = {};\n  for (let i = 0; i < str.length; i++) {\n    let ch = str[i];\n    count[ch] = count[ch] ? count[ch] + 1 : 1;\n  }\n  return count;\n}\n\nconst result = charCount("hello world");\nconsole.log("Input: 'hello world'");\nfor (let char in result) {\n  const display = char === ' ' ? 'space' : "'" + char + "'";\n  console.log(display + " : " + result[char]);\n}`,
+    code1: `function charCount(str) {
+    return str.split('').reduce((acc, char) => {
+        acc[char] = (acc[char] || 0) + 1;
+        return acc;
+    }, {});
+}
+
+const result = charCount("hello world");
+
+console.log("Input: 'hello world'");
+Object.entries(result).forEach(([char, count]) => {
+    const display = char === ' ' ? 'space' : \`'\${char}'\`;
+    console.log(display + " : " + count);
+});`,
+    code2: `function revStr(str) {
+   let freq = {}
+   for(let char of str){
+    freq[char] = (freq[char] || 0)  + 1
+   }
+   return freq
+}
+
+console.log(revStr("javaaasssascript"));`,
   },
   {
     id: 6,
@@ -58,8 +174,31 @@ const QUESTIONS = [
     description: "Given an array, return a new array with elements in reversed order.",
     example: `Input:  [1, 2, 3, 4, 5]\nOutput: [5, 4, 3, 2, 1]`,
     type: "dual",
-    code1: `function reverseArray(arr) {\n  return [...arr].reverse();\n}\n\nconsole.log([1,2,3,4,5],       "=>", reverseArray([1,2,3,4,5]));\nconsole.log(["a","b","c","d"], "=>", reverseArray(["a","b","c","d"]));`,
-    code2: `function reverseArray(arr) {\n  let left = 0, right = arr.length - 1;\n  let copy = [];\n  for (let i = 0; i < arr.length; i++) copy[i] = arr[i];\n  while (left < right) {\n    let temp = copy[left]; copy[left] = copy[right]; copy[right] = temp;\n    left++; right--;\n  }\n  return copy;\n}\n\nconsole.log([1,2,3,4,5],       "=>", reverseArray([1,2,3,4,5]));\nconsole.log(["a","b","c","d"], "=>", reverseArray(["a","b","c","d"]));`,
+    code1: `function reverseArray(arr) {
+    return [...arr].reverse();
+}
+
+console.log([1, 2, 3, 4, 5], "=>", reverseArray([1, 2, 3, 4, 5]));
+console.log(["a", "b", "c", "d"], "=>", reverseArray(["a", "b", "c", "d"]));`,
+    code2: `function reverseArray(arr) {
+    let left = 0;
+    let right = arr.length - 1;
+    let copy = [];
+    for (let i = 0; i < arr.length; i++) {
+        copy[i] = arr[i];
+    }
+    while (left < right) {
+        let temp = copy[left];
+        copy[left] = copy[right];
+        copy[right] = temp;
+        left++;
+        right--;
+    }
+    return copy;
+}
+
+console.log([1, 2, 3, 4, 5], "=>", reverseArray([1, 2, 3, 4, 5]));
+console.log(["a", "b", "c", "d"], "=>", reverseArray(["a", "b", "c", "d"]));`,
   },
   {
     id: 7,
@@ -68,8 +207,29 @@ const QUESTIONS = [
     description: "Given an array and a number k, rotate the array to the right by k positions.",
     example: `Input:  [1,2,3,4,5], k=2\nOutput: [4,5,1,2,3]`,
     type: "dual",
-    code1: `function rotateArray(arr, k) {\n  const n = arr.length;\n  const steps = k % n;\n  return [...arr.slice(n - steps), ...arr.slice(0, n - steps)];\n}\n\nconsole.log([1,2,3,4,5], "k=2 =>", rotateArray([1,2,3,4,5], 2));\nconsole.log([1,2,3,4,5], "k=7 =>", rotateArray([1,2,3,4,5], 7));`,
-    code2: `function reverse(arr, start, end) {\n  while (start < end) {\n    let temp = arr[start]; arr[start] = arr[end]; arr[end] = temp;\n    start++; end--;\n  }\n}\nfunction rotateArray(arr, k) {\n  const n = arr.length; k = k % n;\n  let copy = [];\n  for (let i = 0; i < n; i++) copy[i] = arr[i];\n  reverse(copy, 0, n-1);\n  reverse(copy, 0, k-1);\n  reverse(copy, k, n-1);\n  return copy;\n}\n\nconsole.log([1,2,3,4,5], "k=2 =>", rotateArray([1,2,3,4,5], 2));\nconsole.log([1,2,3,4,5], "k=7 =>", rotateArray([1,2,3,4,5], 7));`,
+    code1: `function rotateArray(arr, k) {
+    const n = arr.length;
+    const steps = k % n;
+    return [...arr.slice(n - steps), ...arr.slice(0, n - steps)];
+}
+
+console.log([1, 2, 3, 4, 5], "k=2 =>", rotateArray([1, 2, 3, 4, 5], 2));
+console.log([1, 2, 3, 4, 5], "k=7 =>", rotateArray([1, 2, 3, 4, 5], 7));`,
+    code2: `function revStr(arr, k) {
+    let result = []
+    let n = arr.length
+    k = k % n
+    for (let i = n-k; i < n ; i++) {
+        result.push(arr[i])
+    }
+    for (let i =0 ; i <n-k; i++) {
+        result.push(arr[i])
+    }
+
+    return result
+}
+
+console.log(revStr([1, 2, 3, 4, 5, 6, 7, 8, 9], 3));`,
   },
   {
     id: 8,
@@ -78,8 +238,42 @@ const QUESTIONS = [
     description: "Given a string, return true if it reads the same forwards and backwards (ignore case & spaces).",
     example: `Input: "racecar"  =>  true\nInput: "hello"    =>  false`,
     type: "dual",
-    code1: `function isPalindrome(str) {\n  const clean = str.toLowerCase().replace(/\\s/g, '');\n  return clean === clean.split('').reverse().join('');\n}\n\nconsole.log("racecar    =>", isPalindrome("racecar"));\nconsole.log("hello      =>", isPalindrome("hello"));\nconsole.log("A man a plan a canal Panama =>", isPalindrome("A man a plan a canal Panama"));`,
-    code2: `function isPalindrome(str) {\n  let clean = "";\n  for (let i = 0; i < str.length; i++) {\n    let c = str[i];\n    if (c === ' ') continue;\n    let code = str.charCodeAt(i);\n    if (code >= 65 && code <= 90) c = String.fromCharCode(code + 32);\n    clean += c;\n  }\n  let left = 0, right = clean.length - 1;\n  while (left < right) {\n    if (clean[left] !== clean[right]) return false;\n    left++; right--;\n  }\n  return true;\n}\n\nconsole.log("racecar    =>", isPalindrome("racecar"));\nconsole.log("hello      =>", isPalindrome("hello"));\nconsole.log("A man a plan a canal Panama =>", isPalindrome("A man a plan a canal Panama"));`,
+    code1: `function isPalindrome(str) {
+    const clean = str.toLowerCase().replace(/\\s/g, '');
+    return clean === clean.split('').reverse().join('');
+}
+
+console.log("racecar    =>", isPalindrome("racecar"));
+console.log("hello      =>", isPalindrome("hello"));
+console.log("A man a plan a canal Panama =>", isPalindrome("A man a plan a canal Panama"));`,
+    code2: `function isPalindrome(str) {
+    let clean = "";
+    for (let i = 0; i < str.length; i++) {
+        let c = str[i];
+        if (c === ' ') {
+            continue;
+        }
+        let code = str.charCodeAt(i);
+        if (code >= 65 && code <= 90) {
+            c = String.fromCharCode(code + 32);
+        }
+        clean += c;
+    }
+    let left = 0;
+    let right = clean.length - 1;
+    while (left < right) {
+        if (clean[left] !== clean[right]) {
+            return false;
+        }
+        left++;
+        right--;
+    }
+    return true;
+}
+
+console.log("racecar    =>", isPalindrome("racecar"));
+console.log("hello      =>", isPalindrome("hello"));
+console.log("A man a plan a canal Panama =>", isPalindrome("A man a plan a canal Panama"));`,
   },
   {
     id: 9,
@@ -88,8 +282,45 @@ const QUESTIONS = [
     description: "Given any value, determine whether it is an Array, a plain Object, or neither.",
     example: `Input: [1,2,3]   =>  "Array"\nInput: {a:1}     =>  "Object"\nInput: "hello"   =>  "Neither"`,
     type: "dual",
-    code1: `function checkType(val) {\n  if (Array.isArray(val)) return "Array";\n  if (val !== null && typeof val === 'object') return "Object";\n  return "Neither";\n}\n\nconsole.log([1,2,3], "=>", checkType([1,2,3]));\nconsole.log({a:1},   "=>", checkType({a:1}));\nconsole.log("hello", "=>", checkType("hello"));\nconsole.log(null,    "=>", checkType(null));`,
-    code2: `function checkType(val) {\n  const tag = Object.prototype.toString.call(val);\n  if (tag === '[object Array]')  return "Array";\n  if (tag === '[object Object]') return "Object";\n  return "Neither";\n}\n\nconsole.log([1,2,3], "=>", checkType([1,2,3]));\nconsole.log({a:1},   "=>", checkType({a:1}));\nconsole.log("hello", "=>", checkType("hello"));\nconsole.log(null,    "=>", checkType(null));`,
+    code1: `function checkType(val) {
+    if (Array.isArray(val)) {
+        return "Array";
+    }
+    if (val !== null && typeof val === 'object') {
+        return "Object";
+    }
+    return "Neither";
+}
+
+console.log([1, 2, 3], "=>", checkType([1, 2, 3]));
+console.log({
+    a: 1
+}, "=>", checkType({
+    a: 1
+}));
+
+console.log("hello", "=>", checkType("hello"));
+console.log(null, "=>", checkType(null));`,
+    code2: `function checkType(val) {
+    const tag = Object.prototype.toString.call(val);
+    if (tag === '[object Array]') {
+        return "Array";
+    }
+    if (tag === '[object Object]') {
+        return "Object";
+    }
+    return "Neither";
+}
+
+console.log([1, 2, 3], "=>", checkType([1, 2, 3]));
+console.log({
+    a: 1
+}, "=>", checkType({
+    a: 1
+}));
+
+console.log("hello", "=>", checkType("hello"));
+console.log(null, "=>", checkType(null));`,
   },
   {
     id: 10,
@@ -98,8 +329,30 @@ const QUESTIONS = [
     description: "Given an array, demonstrate different ways to completely empty it.",
     example: `Input:  [1, 2, 3, 4, 5]\nOutput: []`,
     type: "dual",
-    code1: `let arr1 = [1,2,3,4,5];\nconsole.log("Before:", arr1);\narr1.splice(0, arr1.length);\nconsole.log("After splice():", arr1);\n\nlet arr2 = [1,2,3,4,5];\narr2.length = 0;\nconsole.log("After length=0:", arr2);\n\nlet arr3 = [1,2,3,4,5];\narr3 = [];\nconsole.log("After arr=[]:", arr3);`,
-    code2: `let arr = [1,2,3,4,5];\nconsole.log("Before:", arr);\nwhile (arr.length > 0) {\n  arr[arr.length - 1] = undefined;\n  arr.length--;\n}\nconsole.log("After manual empty:", arr);\nconsole.log("Length:", arr.length);`,
+    code1: `let arr1 = [1, 2, 3, 4, 5];
+
+console.log("Before:", arr1);
+arr1.splice(0, arr1.length);
+
+console.log("After splice():", arr1);
+let arr2 = [1, 2, 3, 4, 5];
+arr2.length = 0;
+
+console.log("After length=0:", arr2);
+let arr3 = [1, 2, 3, 4, 5];
+arr3 = [];
+
+console.log("After arr=[]:", arr3);`,
+    code2: `let arr = [1, 2, 3, 4, 5];
+
+console.log("Before:", arr);
+while (arr.length > 0) {
+    arr[arr.length - 1] = undefined;
+    arr.length--;
+}
+
+console.log("After manual empty:", arr);
+console.log("Length:", arr.length);`,
   },
   {
     id: 11,
@@ -108,8 +361,29 @@ const QUESTIONS = [
     description: "Given a string, reverse each individual word's characters but keep the words in their original order.",
     example: `Input:  "Hello World"\nOutput: "olleH dlroW"`,
     type: "dual",
-    code1: `function reverseWords(str) {\n  return str.split(' ').map(word => word.split('').reverse().join('')).join(' ');\n}\n\nconsole.log("Hello World      =>", reverseWords("Hello World"));\nconsole.log("JavaScript Rocks =>", reverseWords("JavaScript Rocks"));`,
-    code2: `function reverseWords(str) {\n  let result = "", word = "";\n  for (let i = 0; i <= str.length; i++) {\n    if (str[i] === ' ' || i === str.length) {\n      let rev = "";\n      for (let j = word.length - 1; j >= 0; j--) rev += word[j];\n      result += rev;\n      if (i < str.length) result += ' ';\n      word = "";\n    } else { word += str[i]; }\n  }\n  return result;\n}\n\nconsole.log("Hello World      =>", reverseWords("Hello World"));\nconsole.log("JavaScript Rocks =>", reverseWords("JavaScript Rocks"));`,
+    code1: `function reverseWords(str) {
+    return str.split(' ').map(word => word.split('').reverse().join('')).join(' ');
+}
+
+console.log("Hello World      =>", reverseWords("Hello World"));
+console.log("JavaScript Rocks =>", reverseWords("JavaScript Rocks"));`,
+    code2: `function revStr(str) {
+    let result = ""
+    let word = ""
+    for (let i = 0; i <= str.length; i++) {
+        if (i === str.length || str[i] === " ") {
+            for (let j = word.length - 1; j >= 0; j--) {
+                result += word[j]
+
+            } if (i < str.length) result += " "
+            word = ""
+        } else {
+            word += str[i]
+        }
+    }
+    return result
+}
+console.log(revStr("hello world"))`,
   },
   {
     id: 12,
@@ -118,8 +392,53 @@ const QUESTIONS = [
     description: "Given a string, find and return all vowels along with their count.",
     example: `Input:  "javascript"\nOutput: vowels = ['a','a','i'], count = 3`,
     type: "dual",
-    code1: `function findVowels(str) {\n  const vowels = str.split('').filter(c => 'aeiouAEIOU'.includes(c));\n  return { vowels, count: vowels.length };\n}\n\nlet r1 = findVowels("javascript");\nconsole.log("javascript  => vowels:", r1.vowels, "count:", r1.count);\nlet r2 = findVowels("Hello World");\nconsole.log("Hello World => vowels:", r2.vowels, "count:", r2.count);`,
-    code2: `function findVowels(str) {\n  const v = {a:1,e:1,i:1,o:1,u:1,A:1,E:1,I:1,O:1,U:1};\n  let vowels = [], count = 0;\n  for (let i = 0; i < str.length; i++) {\n    if (v[str[i]]) { vowels[count] = str[i]; count++; }\n  }\n  return { vowels, count };\n}\n\nlet r1 = findVowels("javascript");\nconsole.log("javascript  => vowels:", r1.vowels, "count:", r1.count);\nlet r2 = findVowels("Hello World");\nconsole.log("Hello World => vowels:", r2.vowels, "count:", r2.count);`,
+    code1: `function findVowels(str) {
+    const vowels = str.split('').filter(c => 'aeiouAEIOU'.includes(c));
+    return {
+        vowels,
+        count: vowels.length
+    };
+}
+
+let r1 = findVowels("javascript");
+
+console.log("javascript  => vowels:", r1.vowels, "count:", r1.count);
+let r2 = findVowels("Hello World");
+
+console.log("Hello World => vowels:", r2.vowels, "count:", r2.count);`,
+    code2: `function findVowels(str) {
+    const v = {
+        a: 1,
+        e: 1,
+        i: 1,
+        o: 1,
+        u: 1,
+        A: 1,
+        E: 1,
+        I: 1,
+        O: 1,
+        U: 1
+    };
+    let vowels = [];
+    let count = 0;
+    for (let i = 0; i < str.length; i++) {
+        if (v[str[i]]) {
+            vowels[count] = str[i];
+            count++;
+        }
+    }
+    return {
+        vowels,
+        count
+    };
+}
+
+let r1 = findVowels("javascript");
+
+console.log("javascript  => vowels:", r1.vowels, "count:", r1.count);
+let r2 = findVowels("Hello World");
+
+console.log("Hello World => vowels:", r2.vowels, "count:", r2.count);`,
   },
   {
     id: 13,
@@ -128,8 +447,42 @@ const QUESTIONS = [
     description: "Given a string, return a new string where the first letter of each word is capitalized.",
     example: `Input:  "hello world from javascript"\nOutput: "Hello World From Javascript"`,
     type: "dual",
-    code1: `function capitalizeWords(str) {\n  return str.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');\n}\n\nconsole.log(capitalizeWords("hello world from javascript"));\nconsole.log(capitalizeWords("the quick brown fox"));\nconsole.log(capitalizeWords("javaScript iS FUN"));`,
-    code2: `function capitalizeWords(str) {\n  let result = "", newWord = true;\n  for (let i = 0; i < str.length; i++) {\n    let c = str[i];\n    if (c === ' ') { result += ' '; newWord = true; }\n    else if (newWord) {\n      let code = c.charCodeAt(0);\n      if (code >= 97 && code <= 122) c = String.fromCharCode(code - 32);\n      result += c; newWord = false;\n    } else {\n      let code = c.charCodeAt(0);\n      if (code >= 65 && code <= 90) c = String.fromCharCode(code + 32);\n      result += c;\n    }\n  }\n  return result;\n}\n\nconsole.log(capitalizeWords("hello world from javascript"));\nconsole.log(capitalizeWords("the quick brown fox"));\nconsole.log(capitalizeWords("javaScript iS FUN"));`,
+    code1: `function capitalizeWords(str) {
+    return str.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
+}
+
+console.log(capitalizeWords("hello world from javascript"));
+console.log(capitalizeWords("the quick brown fox"));
+console.log(capitalizeWords("javaScript iS FUN"));`,
+    code2: `function capitalizeWords(str) {
+    let result = "";
+    let newWord = true;
+    for (let i = 0; i < str.length; i++) {
+        let c = str[i];
+        if (c === ' ') {
+            result += ' ';
+            newWord = true;
+        } else if (newWord) {
+            let code = c.charCodeAt(0);
+            if (code >= 97 && code <= 122) {
+                c = String.fromCharCode(code - 32);
+            }
+            result += c;
+            newWord = false;
+        } else {
+            let code = c.charCodeAt(0);
+            if (code >= 65 && code <= 90) {
+                c = String.fromCharCode(code + 32);
+            }
+            result += c;
+        }
+    }
+    return result;
+}
+
+console.log(capitalizeWords("hello world from javascript"));
+console.log(capitalizeWords("the quick brown fox"));
+console.log(capitalizeWords("javaScript iS FUN"));`,
   },
   {
     id: 14,
@@ -138,7 +491,28 @@ const QUESTIONS = [
     description: "Find both the sum and product of all elements in an array using only one .reduce() call — no loops, no separate passes.",
     example: `Input:  [1, 2, 3, 4, 5]\nOutput: Sum = 15, Product = 120`,
     type: "logic",
-    code1: `function sumAndProduct(arr) {\n  return arr.reduce(\n    (acc, num) => {\n      acc.sum     += num;\n      acc.product *= num;\n      return acc;\n    },\n    { sum: 0, product: 1 }\n  );\n}\n\nconst r1 = sumAndProduct([1,2,3,4,5]);\nconsole.log("Input: [1,2,3,4,5]");\nconsole.log("Sum    =", r1.sum);\nconsole.log("Product=", r1.product);\n\nconst r2 = sumAndProduct([2,4,6]);\nconsole.log("---");\nconsole.log("Input: [2,4,6]");\nconsole.log("Sum    =", r2.sum);\nconsole.log("Product=", r2.product);`,
+    code1: `function sumAndProduct(arr) {
+    return arr.reduce((acc, num) => {
+        acc.sum += num;
+        acc.product *= num;
+        return acc;
+    }, {
+        sum: 0,
+        product: 1
+    });
+}
+
+const r1 = sumAndProduct([1, 2, 3, 4, 5]);
+
+console.log("Input: [1,2,3,4,5]");
+console.log("Sum    =", r1.sum);
+console.log("Product=", r1.product);
+const r2 = sumAndProduct([2, 4, 6]);
+
+console.log("---");
+console.log("Input: [2,4,6]");
+console.log("Sum    =", r2.sum);
+console.log("Product=", r2.product);`,
   },
   {
     id: 15,
@@ -147,16 +521,63 @@ const QUESTIONS = [
     description: "Given an array of { city, population } objects, merge duplicate cities by summing their populations.",
     example: `Input:  [{city:"Delhi",population:5000},{city:"Delhi",population:2000}]\nOutput: [{city:"Delhi",population:7000}]`,
     type: "logic",
-    code1: `const cities = [\n  { city: "Delhi",   population: 5000 },\n  { city: "Mumbai",  population: 3000 },\n  { city: "Delhi",   population: 2000 },\n  { city: "Chennai", population: 1500 },\n  { city: "Mumbai",  population: 4000 },\n  { city: "Chennai", population: 500  },\n];\n\nfunction mergeCities(data) {\n  const map = data.reduce((acc, item) => {\n    acc[item.city] = (acc[item.city] || 0) + item.population;\n    return acc;\n  }, {});\n  return Object.keys(map).map(city => ({ city, population: map[city] }));\n}\n\nconst result = mergeCities(cities);\nconsole.log("Merged city populations:");\nresult.forEach(r => console.log(" ", r.city, "=>", r.population));`,
+    code1: `const cities = [{
+    city: "Delhi",
+    population: 5000
+}, {
+    city: "Mumbai",
+    population: 3000
+}, {
+    city: "Delhi",
+    population: 2000
+}, {
+    city: "Chennai",
+    population: 1500
+}, {
+    city: "Mumbai",
+    population: 4000
+}, {
+    city: "Chennai",
+    population: 500
+}];
+function mergeCities(data) {
+    const map = data.reduce((acc, item) => {
+        acc[item.city] = (acc[item.city] || 0) + item.population;
+        return acc;
+    }, {});
+    return Object.keys(map).map(city => ({
+        city,
+        population: map[city]
+    }));
+}
+
+const result = mergeCities(cities);
+
+console.log("Merged city populations:");
+result.forEach(r => console.log(" ", r.city, "=>", r.population));`,
   },
   {
     id: 16,
     category: "Logic",
     title: "Find all pairs that sum to a target value",
-    description: "Given an array and a target sum, return all unique pairs whose elements add up to that target. Works for unsorted arrays too.",
-    example: `Input:  [1,2,3,4,5,6,7,8,9], sum=10\nOutput: [[1,9],[2,8],[3,7],[4,6]]`,
+    description: "Given an array and a target sum, find matching pairs using previously seen values. Works for unsorted arrays too.",
+    example: `Input:  [1,2,3,4,5,6,7,8,9], sum=10\nOutput: [[6,4],[7,3],[8,2],[9,1]]`,
     type: "logic",
-    code1: `function findPairs(arr, target) {\n  const seen = new Set();\n  const used = new Set();\n  const pairs = [];\n\n  for (const num of arr) {\n    const complement = target - num;\n\n    if (seen.has(complement) && !used.has(complement)) {\n      const pair = num < complement ? [num, complement] : [complement, num];\n      pairs.push(pair);\n      used.add(complement);\n      used.add(num);\n    }\n    seen.add(num);\n  }\n  return pairs;\n}\n\nconsole.log("Sorted [1-9], target=10:");\nconsole.log(findPairs([1,2,3,4,5,6,7,8,9], 10));\nconsole.log("Unsorted [9,1,5,3,7,4,2,8,6], target=10:");\nconsole.log(findPairs([9,1,5,3,7,4,2,8,6], 10));\nconsole.log("target=8:");\nconsole.log(findPairs([4,3,8,7,2,1,5,6,0,10], 8));`,
+    code1: `function revStr(arr, target) {
+    let result = []
+    let set = new Set()
+
+    for (let i = 0; i < arr.length; i++) {
+        let comp = target -arr[i]
+        if(set.has(comp)){
+            result.push([arr[i] , comp])
+        }
+        set.add(arr[i])
+    }
+    return result
+
+}
+console.log(revStr([1, 2, 3, 4, 5, 6, 7, 8, 9], 10))`,
   },
   {
     id: 17,
@@ -167,47 +588,45 @@ const QUESTIONS = [
     type: "react",
     component: "FormValidation",
     code: `import { useState } from "react";
-
 function FormValidation() {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [errors, setErrors] = useState({});
-  const [submitted, setSubmitted] = useState(false);
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const newErrors = {};
-
-    if (!name.trim()) newErrors.name = "Name is required";
-    if (!email.trim()) newErrors.email = "Email is required";
-    else if (!/\\S+@\\S+\\.\\S+/.test(email))
-      newErrors.email = "Enter a valid email";
-
-    setErrors(newErrors);
-
-    if (Object.keys(newErrors).length === 0) {
-      console.log("Form submitted:", { name, email });
-      setSubmitted(true);
+    const [name, setName] = useState("");
+    const [email, setEmail] = useState("");
+    const [errors, setErrors] = useState({});
+    const [submitted, setSubmitted] = useState(false);
+    const handleSubmit = e => {
+        e.preventDefault();
+        const newErrors = {};
+        if (!name.trim()) {
+            newErrors.name = "Name is required";
+        }
+        if (!email.trim()) {
+            newErrors.email = "Email is required";
+        } else if (!/\\S+@\\S+\\.\\S+/.test(email)) {
+            newErrors.email = "Enter a valid email";
+        }
+        setErrors(newErrors);
+        if (Object.keys(newErrors).length === 0) {
+            console.log("Form submitted:", {
+                name,
+                email
+            });
+            setSubmitted(true);
+        }
+    };
+    if (submitted) {
+        return <p>Submitted! Check console.</p>;
     }
-  };
-
-  if (submitted) return <p>Submitted! Check console.</p>;
-
-  return (
-    <form onSubmit={handleSubmit}>
-      <div>
-        <input type="text" placeholder="Name" value={name}
-          onChange={e => setName(e.target.value)} />
-        {errors.name && <p>{errors.name}</p>}
-      </div>
-      <div>
-        <input type="text" placeholder="Email" value={email}
-          onChange={e => setEmail(e.target.value)} />
-        {errors.email && <p>{errors.email}</p>}
-      </div>
-      <button type="submit">Submit</button>
-    </form>
-  );
+    return <form onSubmit={handleSubmit}>
+                        <div>
+                                <input type="text" placeholder="Name" value={name} onChange={e => setName(e.target.value)} />
+                                {errors.name && <p>{errors.name}</p>}
+                        </div>
+                        <div>
+                                <input type="text" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} />
+                                {errors.email && <p>{errors.email}</p>}
+                        </div>
+                        <button type="submit">Submit</button>
+                </form>;
 }`,
   },
   {
@@ -219,40 +638,28 @@ function FormValidation() {
     type: "react",
     component: "ApiPagination",
     code: `import { useState, useEffect } from "react";
-
 function ApiPagination() {
-  const [posts, setPosts] = useState([]);
-  const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const limit = 5;
-
-  useEffect(() => {
-    setLoading(true);
-    fetch(\`https://jsonplaceholder.typicode.com/posts?_page=\${page}&_limit=\${limit}\`)
-      .then((res) => res.json())
-      .then((data) => setPosts(data))
-      .finally(() => setLoading(false));
-  }, [page]);
-
-  return (
-    <div>
-      {loading ? <p>Loading...</p> : (
-        <table border="1" cellPadding="8">
-          <thead><tr><th>ID</th><th>Title</th></tr></thead>
-          <tbody>
-            {posts.map((p) => (
-              <tr key={p.id}><td>{p.id}</td><td>{p.title}</td></tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-      <div>
-        <button onClick={() => setPage(p => p - 1)} disabled={page === 1}>Prev</button>
-        <span> Page {page} </span>
-        <button onClick={() => setPage(p => p + 1)}>Next</button>
-      </div>
-    </div>
-  );
+    const [posts, setPosts] = useState([]);
+    const [page, setPage] = useState(1);
+    const [loading, setLoading] = useState(false);
+    const limit = 5;
+    useEffect(() => {
+        setLoading(true);
+        fetch(\`https://jsonplaceholder.typicode.com/posts?_page=\${page}&_limit=\${limit}\`).then(res => res.json()).then(data => setPosts(data)).finally(() => setLoading(false));
+    }, [page]);
+    return <div>
+                        {loading ? <p>Loading...</p> : <table border="1" cellPadding="8">
+                                        <thead><tr><th>ID</th><th>Title</th></tr></thead>
+                                        <tbody>
+                                                {posts.map(p => <tr key={p.id}><td>{p.id}</td><td>{p.title}</td></tr>)}
+                                        </tbody>
+                                </table>}
+                        <div>
+                                <button onClick={() => setPage(p => p - 1)} disabled={page === 1}>Prev</button>
+                                <span> Page {page} </span>
+                                <button onClick={() => setPage(p => p + 1)}>Next</button>
+                        </div>
+                </div>;
 }`,
   },
   {
@@ -264,18 +671,14 @@ function ApiPagination() {
     type: "react",
     component: "CounterApp",
     code: `import { useState } from "react";
-
 function CounterApp() {
-  const [count, setCount] = useState(0);
-
-  return (
-    <div>
-      <h2>{count}</h2>
-      <button onClick={() => setCount(count + 1)}>Increase</button>
-      <button onClick={() => setCount(count - 1)}>Decrease</button>
-      <button onClick={() => setCount(0)}>Reset</button>
-    </div>
-  );
+    const [count, setCount] = useState(0);
+    return <div>
+                        <h2>{count}</h2>
+                        <button onClick={() => setCount(count + 1)}>Increase</button>
+                        <button onClick={() => setCount(count - 1)}>Decrease</button>
+                        <button onClick={() => setCount(0)}>Reset</button>
+                </div>;
 }`,
   },
   {
@@ -288,15 +691,14 @@ function CounterApp() {
     component: "ChildToParent",
     code: `// Child.jsx
 import { useState } from "react";
-
-function Child({ onSend }) {
-  const [input, setInput] = useState("");
-  return (
-    <div>
-      <input value={input} onChange={e => setInput(e.target.value)} placeholder="Type something" />
-      <button onClick={() => onSend(input)}>Send to Parent</button>
-    </div>
-  );
+function Child({
+    onSend
+}) {
+    const [input, setInput] = useState("");
+    return <div>
+                        <input value={input} onChange={e => setInput(e.target.value)} placeholder="Type something" />
+                        <button onClick={() => onSend(input)}>Send to Parent</button>
+                </div>;
 }
 
 export default Child;
@@ -306,15 +708,12 @@ export default Child;
 // Parent.jsx (usage — different file, imports Child above)
 import { useState } from "react";
 import Child from "./Child";
-
 function Parent() {
-  const [received, setReceived] = useState("");
-  return (
-    <div>
-      <Child onSend={(val) => setReceived(val)} />
-      <p>Parent received: <b>{received}</b></p>
-    </div>
-  );
+    const [received, setReceived] = useState("");
+    return <div>
+                        <Child onSend={val => setReceived(val)} />
+                        <p>Parent received: <b>{received}</b></p>
+                </div>;
 }`,
   },
   {
@@ -327,17 +726,18 @@ function Parent() {
     component: "ThemeToggle",
     code: `// ThemeContext.jsx
 import { useState, createContext } from "react";
-
 const ThemeContext = createContext();
-
-function ThemeProvider({ children }) {
-  const [theme, setTheme] = useState("light");
-  const toggleTheme = () => setTheme(t => t === "light" ? "dark" : "light");
-  return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
-      {children}
-    </ThemeContext.Provider>
-  );
+function ThemeProvider({
+    children
+}) {
+    const [theme, setTheme] = useState("light");
+    const toggleTheme = () => setTheme(t => t === "light" ? "dark" : "light");
+    return <ThemeContext.Provider value={{
+        theme,
+        toggleTheme
+    }}>
+                        {children}
+                </ThemeContext.Provider>;
 }
 
 export { ThemeContext, ThemeProvider };
@@ -347,22 +747,23 @@ export { ThemeContext, ThemeProvider };
 // ThemedBox.jsx (different file, consumes the context above)
 import { useContext } from "react";
 import { ThemeContext } from "./ThemeContext";
-
 function ThemedBox() {
-  const { theme, toggleTheme } = useContext(ThemeContext);
-  const isDark = theme === "dark";
-  return (
-    <div style={{
-      background: isDark ? "#1a1a1a" : "#fff",
-      color: isDark ? "#fff" : "#1a1a1a",
-      padding: 24, borderRadius: 10,
+    const {
+        theme,
+        toggleTheme
+    } = useContext(ThemeContext);
+    const isDark = theme === "dark";
+    return <div style={{
+        background: isDark ? "#1a1a1a" : "#fff",
+        color: isDark ? "#fff" : "#1a1a1a",
+        padding: 24,
+        borderRadius: 10
     }}>
-      <p>Current theme: <b>{theme}</b></p>
-      <button onClick={toggleTheme}>
-        Switch to {isDark ? "Light" : "Dark"}
-      </button>
-    </div>
-  );
+                        <p>Current theme: <b>{theme}</b></p>
+                        <button onClick={toggleTheme}>
+                                Switch to {isDark ? "Light" : "Dark"}
+                        </button>
+                </div>;
 }
 
 export default ThemedBox;
@@ -372,13 +773,10 @@ export default ThemedBox;
 // App.jsx (usage — different file, wires Provider + consumer together)
 import { ThemeProvider } from "./ThemeContext";
 import ThemedBox from "./ThemedBox";
-
 function App() {
-  return (
-    <ThemeProvider>
-      <ThemedBox />
-    </ThemeProvider>
-  );
+    return <ThemeProvider>
+                        <ThemedBox />
+                </ThemeProvider>;
 }`,
   },
   {
@@ -390,24 +788,21 @@ function App() {
     type: "react",
     component: "CountdownTimer",
     code: `import { useState, useEffect } from "react";
-
 function CountdownTimer() {
-  const [time, setTime] = useState(10);
-
-  useEffect(() => {
-    if (time === 0) return;
-    const interval = setInterval(() => {
-      setTime(t => t - 1);
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [time]);
-
-  return (
-    <div>
-      <h2>{time === 0 ? "Time's up!" : time}</h2>
-      <button onClick={() => setTime(10)}>Restart</button>
-    </div>
-  );
+    const [time, setTime] = useState(10);
+    useEffect(() => {
+        if (time === 0) {
+            return;
+        }
+        const interval = setInterval(() => {
+            setTime(t => t - 1);
+        }, 1000);
+        return () => clearInterval(interval);
+    }, [time]);
+    return <div>
+                        <h2>{time === 0 ? "Time's up!" : time}</h2>
+                        <button onClick={() => setTime(10)}>Restart</button>
+                </div>;
 }`,
   },
   {
@@ -419,37 +814,34 @@ function CountdownTimer() {
     type: "react",
     component: "Stopwatch",
     code: `import { useState, useEffect, useRef } from "react";
-
 function Stopwatch() {
-  const [time, setTime] = useState(0);
-  const [running, setRunning] = useState(false);
-  const [reverse, setReverse] = useState(false);
-  const intervalRef = useRef(null);
-
-  useEffect(() => {
-    if (running) {
-      intervalRef.current = setInterval(() => {
-        setTime(t => reverse ? Math.max(0, t - 1) : t + 1);
-      }, 1000);
-    } else {
-      clearInterval(intervalRef.current);
-    }
-    return () => clearInterval(intervalRef.current);
-  }, [running, reverse]);
-
-  const reset = () => { setTime(0); setRunning(false); };
-
-  return (
-    <div>
-      <h2>{time}s</h2>
-      <button onClick={() => setRunning(true)}>Start</button>
-      <button onClick={() => setRunning(false)}>Stop</button>
-      <button onClick={reset}>Reset</button>
-      <button onClick={() => setReverse(r => !r)}>
-        {reverse ? "Forward" : "Reverse"}
-      </button>
-    </div>
-  );
+    const [time, setTime] = useState(0);
+    const [running, setRunning] = useState(false);
+    const [reverse, setReverse] = useState(false);
+    const intervalRef = useRef(null);
+    useEffect(() => {
+        if (running) {
+            intervalRef.current = setInterval(() => {
+                setTime(t => reverse ? Math.max(0, t - 1) : t + 1);
+            }, 1000);
+        } else {
+            clearInterval(intervalRef.current);
+        }
+        return () => clearInterval(intervalRef.current);
+    }, [running, reverse]);
+    const reset = () => {
+        setTime(0);
+        setRunning(false);
+    };
+    return <div>
+                        <h2>{time}s</h2>
+                        <button onClick={() => setRunning(true)}>Start</button>
+                        <button onClick={() => setRunning(false)}>Stop</button>
+                        <button onClick={reset}>Reset</button>
+                        <button onClick={() => setReverse(r => !r)}>
+                                {reverse ? "Forward" : "Reverse"}
+                        </button>
+                </div>;
 }`,
   },
   {
@@ -461,22 +853,16 @@ function Stopwatch() {
     type: "react",
     component: "ProgressBar",
     code: `function ProgressBar() {
-  const [progress, setProgress] = useState(40);
-
-  return (
-    <div className="p-6">
-      <p className="mb-2 font-medium">Progress: {progress}%</p>
-      <div className="w-full bg-gray-200 rounded-full h-4 mb-4">
-        <div
-          className="bg-blue-500 h-4 rounded-full transition-all duration-300"
-          style={{ width: progress + "%" }}
-        />
-      </div>
-      <input type="range" min="0" max="100" value={progress}
-        onChange={e => setProgress(Number(e.target.value))}
-        className="w-full" />
-    </div>
-  );
+    const [progress, setProgress] = useState(40);
+    return <div className="p-6">
+                        <p className="mb-2 font-medium">Progress: {progress}%</p>
+                        <div className="w-full bg-gray-200 rounded-full h-4 mb-4">
+                                <div className="bg-blue-500 h-4 rounded-full transition-all duration-300" style={{
+                width: progress + "%"
+            }} />
+                        </div>
+                        <input type="range" min="0" max="100" value={progress} onChange={e => setProgress(Number(e.target.value))} className="w-full" />
+                </div>;
 }`,
   },
   {
@@ -489,36 +875,33 @@ function Stopwatch() {
     component: "UseFetchDemo",
     code: `// useFetch.js
 import { useEffect, useState } from "react";
-
 function useFetch(url) {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-
-        const response = await fetch(url);
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch data");
-        }
-
-        const result = await response.json();
-        setData(result);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
+    const [data, setData] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                setLoading(true);
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error("Failed to fetch data");
+                }
+                const result = await response.json();
+                setData(result);
+            } catch (err) {
+                setError(err.message);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchData();
+    }, [url]);
+    return {
+        data,
+        loading,
+        error
     };
-
-    fetchData();
-  }, [url]);
-
-  return { data, loading, error };
 }
 
 export default useFetch;
@@ -527,22 +910,21 @@ export default useFetch;
 
 // App.jsx (usage — different file, imports the hook above)
 import useFetch from "./useFetch";
-
 function App() {
-  const { data, loading, error } = useFetch(
-    "https://dummyjson.com/products"
-  );
-
-  if (loading) return <h2>Loading...</h2>;
-  if (error) return <h2>{error}</h2>;
-
-  return (
-    <div>
-      {data?.products?.map((product) => (
-        <p key={product.id}>{product.title}</p>
-      ))}
-    </div>
-  );
+    const {
+        data,
+        loading,
+        error
+    } = useFetch("https://dummyjson.com/products");
+    if (loading) {
+        return <h2>Loading...</h2>;
+    }
+    if (error) {
+        return <h2>{error}</h2>;
+    }
+    return <div>
+                        {data?.products?.map(product => <p key={product.id}>{product.title}</p>)}
+                </div>;
 }`,
   },
   {
@@ -554,163 +936,38 @@ function App() {
     type: "react",
     component: "FrequencyCounter",
     code: `import { useState } from "react";
-
 function FrequencyCounter() {
-  const [text, setText] = useState("");
-  const [frequency, setFrequency] = useState({});
+    const [text, setText] = useState("");
+    const [frequency, setFrequency] = useState({});
+    const handleChange = e => {
+        const value = e.target.value;
+        setText(value);
+        const freq = {};
+        for (const char of value) {
+            if (char !== " ") {
+                freq[char] = (freq[char] || 0) + 1;
+            }
+        }
+        setFrequency(freq);
+    };
+    return <div>
+                        <input type="text" value={text} onChange={handleChange} placeholder="Type something..." />
 
-  const handleChange = (e) => {
-    const value = e.target.value;
+                        <h3>Frequency</h3>
 
-    setText(value);
-
-    const freq = {};
-
-    for (const char of value) {
-      if (char !== " ") {
-        freq[char] = (freq[char] || 0) + 1;
-      }
-    }
-
-    setFrequency(freq);
-  };
-
-  return (
-    <div>
-      <input
-        type="text"
-        value={text}
-        onChange={handleChange}
-        placeholder="Type something..."
-      />
-
-      <h3>Frequency</h3>
-
-      {Object.entries(frequency).map(([char, count]) => (
-        <p key={char}>
-          {char}: {count}
-        </p>
-      ))}
-    </div>
-  );
+                        {Object.entries(frequency).map(([char, count]) => <p key={char}>
+                                        {char}: {count}
+                                </p>)}
+                </div>;
 }
 
 export default FrequencyCounter;`,
   },
   {
-    id: 46,
-    category: "String",
-    title: "Sort a string in alphabetical order (selection sort)",
-    description: "Given an input string, return a new string with all its characters arranged in alphabetical order.",
-    example: `Input:  "react"\nOutput: "aectr"`,
-    type: "dual",
-    code1: `const str = "react";
-
-const result = str.split("").sort().join("");
-
-console.log(result);`,
-    code2: `const str = "react";
-const arr = str.split("");
-
-for (let i = 0; i < arr.length; i++) {
-  for (let j = i + 1; j < arr.length; j++) {
-    if (arr[i] > arr[j]) {
-      [arr[i], arr[j]] = [arr[j], arr[i]];
-    }
-  }
-}
-
-console.log(arr.join(""));`,
-  },
-  {
-    id: 47,
-    category: "String",
-    title: "Total count of a given string",
-    description: "Given a string, find its total character count — once using the built-in length property, and once by counting every character's own frequency.",
-    example: `Input:  "react"\nOutput: Total length = 5\n        Frequency = { r:1, e:1, a:1, c:1, t:1 }`,
-    type: "dual",
-    code1: `const str = "react";
-
-console.log(str.length);`,
-    code2: `const str = "react";
-
-const count = {};
-
-for (const char of str) {
-  count[char] = (count[char] || 0) + 1;
-}
-
-console.log(count);`,
-  },
-  {
-    id: 48,
-    category: "String",
-    title: "Length of the longest substring without repeating characters",
-    description: "Given a string, find the length of the longest substring that has no repeating characters, using the sliding window technique. Bonus: return the substring itself too, not just its length.",
-    example: `Input:  "abcabcbb"\nOutput (length only): 3\nOutput (substring + length): { substring: "abc", length: 3 }`,
-    type: "logic",
-    code1: `// Step 1 — basic version: returns only the length
-function longestSubstring(str) {
-  let set = new Set();
-  let left = 0;
-  let maxLength = 0;
-
-  for (let right = 0; right < str.length; right++) {
-
-    while (set.has(str[right])) {
-      set.delete(str[left]);
-      left++;
-    }
-
-    set.add(str[right]);
-
-    maxLength = Math.max(maxLength, right - left + 1);
-  }
-
-  return maxLength;
-}
-
-console.log(longestSubstring("abcabcbb"));
-
-// ──────────────────────────────────────────────────────
-
-// Step 2 — same sliding window, extended to also return the substring itself
-function longestSubstringWithValue(str) {
-  let set = new Set();
-  let left = 0;
-
-  let maxLength = 0;
-  let longest = "";
-
-  for (let right = 0; right < str.length; right++) {
-    while (set.has(str[right])) {
-      set.delete(str[left]);
-      left++;
-    }
-
-    set.add(str[right]);
-
-    const currentLength = right - left + 1;
-
-    if (currentLength > maxLength) {
-      maxLength = currentLength;
-      longest = str.slice(left, right + 1);
-    }
-  }
-
-  return {
-    substring: longest,
-    length: maxLength
-  };
-}
-
-console.log(longestSubstringWithValue("abcabcbb"));`,
-  },
-  {
     id: 25,
     category: "Routing",
     title: "Route Parameters (Dynamic Segments)",
-    description: "समझें कि कैसे URL में डायनामिक values pass करते हैं।",
+    description: "Samjho ki URL mein dynamic values kaise pass karte hain.",
     example: `Route: /user/:id\nURL: /user/123\nParam: id = 123`,
     type: "theory",
     code1: `// English: Route Parameters
@@ -719,11 +976,12 @@ console.log(longestSubstringWithValue("abcabcbb"));`,
 
 // Example 1: React Router Usage
 import { useParams } from "react-router-dom";
-
 function UserProfile() {
-  const { id } = useParams(); // Extract 'id' from URL
-  console.log("User ID from URL:", id);
-  return <h2>Viewing User: {id}</h2>;
+    const {
+        id
+    } = useParams(); // Extract 'id' from URL
+    console.log("User ID from URL:", id);
+    return <h2>Viewing User: {id}</h2>;
 }
 
 // Route definition: <Route path="/user/:id" element={<UserProfile />} />
@@ -739,11 +997,10 @@ function UserProfile() {
 // Example 2: Express Server
 const express = require('express');
 const app = express();
-
 app.get('/product/:id', (req, res) => {
-  const productId = req.params.id; // ':id' se value milti hai
-  console.log("Product ID:", productId);
-  res.send(\`Showing product \${productId}\`);
+    const productId = req.params.id; // ':id' se value milti hai
+    console.log("Product ID:", productId);
+    res.send(\`Showing product \${productId}\`);
 });
 
 // Request: GET /product/456
@@ -755,8 +1012,8 @@ app.get('/product/:id', (req, res) => {
 // URL: /user/:userId/posts/:postId
 
 app.get('/user/:userId/posts/:postId', (req, res) => {
-  console.log("User:", req.params.userId, "Post:", req.params.postId);
-  res.send(\`User \${req.params.userId}'s Post \${req.params.postId}\`);
+    console.log("User:", req.params.userId, "Post:", req.params.postId);
+    res.send(\`User \${req.params.userId}'s Post \${req.params.postId}\`);
 });
 
 // Request: GET /user/42/posts/789
@@ -766,7 +1023,7 @@ app.get('/user/:userId/posts/:postId', (req, res) => {
     id: 26,
     category: "Routing",
     title: "Query Parameters (URL Search String)",
-    description: "सीखें कि कैसे ? के बाद query string से data लेते हैं।",
+    description: "Seekho ki ? ke baad query string se data kaise lete hain.",
     example: `URL: /search?q=javascript&sort=date\nParams: {q: 'javascript', sort: 'date'}`,
     type: "theory",
     code1: `// English: Query Parameters
@@ -776,21 +1033,19 @@ app.get('/user/:userId/posts/:postId', (req, res) => {
 
 // Example 1: React - Using URLSearchParams
 function SearchPage() {
-  const [results, setResults] = React.useState([]);
-  
-  React.useEffect(() => {
-    const searchParams = new URLSearchParams(window.location.search);
-    const query = searchParams.get('q'); // Get 'q' parameter
-    const sort = searchParams.get('sort'); // Get 'sort' parameter
-    
-    console.log("Search query:", query);
-    console.log("Sort by:", sort);
-    
-    // Fetch results based on query and sort
-    setResults([...]);
-  }, []);
-  
-  return <div>Results for: {new URLSearchParams(window.location.search).get('q')}</div>;
+    const [results, setResults] = React.useState([]);
+    React.useEffect(() => {
+        const searchParams = new URLSearchParams(window.location.search);
+        const query = searchParams.get('q'); // Get 'q' parameter
+        const sort = searchParams.get('sort'); // Get 'sort' parameter
+
+        console.log("Search query:", query);
+        console.log("Sort by:", sort);
+
+        // Fetch results based on query and sort
+        setResults([]); // Replace the empty array with fetched results.
+    }, []);
+    return <div>Results for: {new URLSearchParams(window.location.search).get('q')}</div>;
 }
 
 // URL: http://localhost:3000/search?q=javascript&sort=date
@@ -805,14 +1060,17 @@ function SearchPage() {
 
 // Example 2: Express Server
 app.get('/api/search', (req, res) => {
-  const query = req.query.q; // ?q=value
-  const page = req.query.page; // ?page=value
-  const limit = req.query.limit; // ?limit=value
-  
-  console.log("Search term:", query);
-  console.log("Page:", page, "Limit:", limit);
-  
-  res.json({ query, page, limit });
+    const query = req.query.q; // ?q=value
+    const page = req.query.page; // ?page=value
+    const limit = req.query.limit; // ?limit=value
+
+    console.log("Search term:", query);
+    console.log("Page:", page, "Limit:", limit);
+    res.json({
+        query,
+        page,
+        limit
+    });
 });
 
 // Request: GET /api/search?q=react&page=1&limit=10
@@ -822,19 +1080,15 @@ app.get('/api/search', (req, res) => {
 
 // Example 3: React Router with useSearchParams
 import { useSearchParams } from "react-router-dom";
-
 function FilteredProducts() {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const category = searchParams.get('category');
-  const minPrice = searchParams.get('minPrice');
-  const maxPrice = searchParams.get('maxPrice');
-  
-  return (
-    <div>
-      <p>Category: {category}</p>
-      <p>Price Range: {minPrice} - {maxPrice}</p>
-    </div>
-  );
+    const [searchParams, setSearchParams] = useSearchParams();
+    const category = searchParams.get('category');
+    const minPrice = searchParams.get('minPrice');
+    const maxPrice = searchParams.get('maxPrice');
+    return <div>
+                        <p>Category: {category}</p>
+                        <p>Price Range: {minPrice} - {maxPrice}</p>
+                </div>;
 }
 
 // URL: /products?category=electronics&minPrice=100&maxPrice=500
@@ -844,7 +1098,7 @@ function FilteredProducts() {
     id: 27,
     category: "Routing",
     title: "Route vs Query vs Path Parameters - Complete Comparison",
-    description: "तीनों के बीच अंतर समझें - कौन कब use करते हैं।",
+    description: "Teeno ke beech ka difference samjho — kaunsa kab use karte hain.",
     example: `Route: /user/:id (Dynamic)\nQuery: /user?id=123 (Optional filters)\nPath: /user/profile/settings (Fixed segments)`,
     type: "theory",
     code1: `// English: Comparison of Route, Query, and Path Parameters
@@ -857,14 +1111,13 @@ function FilteredProducts() {
 // Example:
 
 const routeExample = \`
-  URL: /user/42
-  Route: /user/:id
-  Extract: const { id } = useParams(); // id = "42"
-  Best for: Identifying specific, required resources
+        URL: /user/42
+        Route: /user/:id
+        Extract: const { id } = useParams(); // id = "42"
+        Best for: Identifying specific, required resources
 \`;
-
 app.get('/user/:id', (req, res) => {
-  console.log("Route param - User ID:", req.params.id);
+    console.log("Route param - User ID:", req.params.id);
 });
 
 // ──────────────────────────────────────────────────────
@@ -876,16 +1129,23 @@ app.get('/user/:id', (req, res) => {
 // Example:
 
 const queryExample = \`
-  URL: /users?role=admin&active=true&page=2
-  Format: /users?key1=val1&key2=val2
-  Extract: const { role, active, page } = req.query;
-  Best for: Optional filters, searching, pagination
+        URL: /users?role=admin&active=true&page=2
+        Format: /users?key1=val1&key2=val2
+        Extract: const { role, active, page } = req.query;
+        Best for: Optional filters, searching, pagination
 \`;
-
 app.get('/users', (req, res) => {
-  const { role, active, page } = req.query;
-  console.log("Query params:", { role, active, page });
-  // Query: role="admin", active="true", page="2"
+    const {
+        role,
+        active,
+        page
+    } = req.query;
+    console.log("Query params:", {
+        role,
+        active,
+        page
+    });
+    // Query: role="admin", active="true", page="2"
 });
 
 // ──────────────────────────────────────────────────────
@@ -897,15 +1157,18 @@ app.get('/users', (req, res) => {
 // Example:
 
 const pathExample = \`
-  URL: /user/42/posts/789/comments/101
-  Path segments: /user/42/posts/789/comments/101
-  Extract: const { userId, postId, commentId } = useParams();
-  Best for: Hierarchical or nested resources
+        URL: /user/42/posts/789/comments/101
+        Path segments: /user/42/posts/789/comments/101
+        Extract: const { userId, postId, commentId } = useParams();
+        Best for: Hierarchical or nested resources
 \`;
-
 app.get('/user/:userId/posts/:postId/comments/:commentId', (req, res) => {
-  const { userId, postId, commentId } = req.params;
-  console.log("Path - User:", userId, "Post:", postId, "Comment:", commentId);
+    const {
+        userId,
+        postId,
+        commentId
+    } = req.params;
+    console.log("Path - User:", userId, "Post:", postId, "Comment:", commentId);
 });
 
 // ──────────────────────────────────────────────────────
@@ -936,25 +1199,27 @@ app.get('/user/:userId/posts/:postId/comments/:commentId', (req, res) => {
 // Real-World Example:
 
 const realWorldUrl = \`
-  GET /api/shop/users/42/orders?status=shipped&limit=10
+        GET /api/shop/users/42/orders?status=shipped&limit=10
 
-  Breakdown:
-  - Fixed path: /api/shop/users
-  - Route param: 42 (user ID)
-  - Query params: status=shipped&limit=10
-  
-  Extracted:
-  - req.params.id = "42"
-  - req.query.status = "shipped"
-  - req.query.limit = "10"
+        Breakdown:
+        - Fixed path: /api/shop/users
+        - Route param: 42 (user ID)
+        - Query params: status=shipped&limit=10
+        
+        Extracted:
+        - req.params.id = "42"
+        - req.query.status = "shipped"
+        - req.query.limit = "10"
 \`;
-
 app.get('/api/shop/users/:id/orders', (req, res) => {
-  const userId = req.params.id; // 42
-  const { status, limit } = req.query; // shipped, 10
-  
-  console.log(\`User \${userId} - Status: \${status}, Limit: \${limit}\`);
-  // Output: User 42 - Status: shipped, Limit: 10
+    const userId = req.params.id; // 42
+    const {
+        status,
+        limit
+    } = req.query; // shipped, 10
+
+    console.log(\`User \${userId} - Status: \${status}, Limit: \${limit}\`);
+    // Output: User 42 - Status: shipped, Limit: 10
 });`,
   },
   {
@@ -965,33 +1230,47 @@ app.get('/api/shop/users/:id/orders', (req, res) => {
     example: `log(); log(); log(); // only ONE call actually fires, after the delay`,
     type: "dual",
     code1: `function debounce(fn, delay) {
-  let timer;
-  return function (...args) {
-    clearTimeout(timer);
-    timer = setTimeout(() => fn.apply(this, args), delay);
-  };
+    let timer;
+    return function (...args) {
+        clearTimeout(timer);
+        timer = setTimeout(() => fn.apply(this, args), delay);
+    };
 }
 
 let calls = 0;
-const log = debounce(() => { calls++; console.log("Debounced call #" + calls); }, 50);
-log(); log(); log(); // rapid calls — only the last one survives
+const log = debounce(() => {
+    calls++;
+    console.log("Debounced call #" + calls);
+}, 50);
+log();
+log();
+log(); // rapid calls — only the last one survives
 setTimeout(() => console.log("Total calls after 100ms:", calls), 100);`,
     code2: `function debounce(fn, delay) {
-  var timer = null;
-  return function () {
-    var args = arguments;
-    var context = this;
-    if (timer) clearTimeout(timer);
-    timer = setTimeout(function () {
-      fn.apply(context, args);
-    }, delay);
-  };
+    var timer = null;
+    return function () {
+        var args = arguments;
+        var context = this;
+        if (timer) {
+            clearTimeout(timer);
+        }
+        timer = setTimeout(function () {
+            fn.apply(context, args);
+        }, delay);
+    };
 }
 
 var calls = 0;
-var log = debounce(function () { calls++; console.log("Debounced call #" + calls); }, 50);
-log(); log(); log();
-setTimeout(function () { console.log("Total calls after 100ms:", calls); }, 100);`,
+var log = debounce(function () {
+    calls++;
+    console.log("Debounced call #" + calls);
+}, 50);
+log();
+log();
+log();
+setTimeout(function () {
+    console.log("Total calls after 100ms:", calls);
+}, 100);`,
   },
   {
     id: 29,
@@ -1001,33 +1280,49 @@ setTimeout(function () { console.log("Total calls after 100ms:", calls); }, 100)
     example: `log(); log(); log(); // only the FIRST call fires immediately`,
     type: "dual",
     code1: `function throttle(fn, limit) {
-  let waiting = false;
-  return function (...args) {
-    if (waiting) return;
-    fn.apply(this, args);
-    waiting = true;
-    setTimeout(() => { waiting = false; }, limit);
-  };
+    let waiting = false;
+    return function (...args) {
+        if (waiting) {
+            return;
+        }
+        fn.apply(this, args);
+        waiting = true;
+        setTimeout(() => {
+            waiting = false;
+        }, limit);
+    };
 }
 
 let count = 0;
-const log = throttle(() => { count++; console.log("Throttled call #" + count); }, 50);
-log(); log(); log();
+const log = throttle(() => {
+    count++;
+    console.log("Throttled call #" + count);
+}, 50);
+log();
+log();
+log();
+
 console.log("Immediate count:", count);`,
     code2: `function throttle(fn, limit) {
-  var lastRun = 0;
-  return function () {
-    var now = Date.now();
-    if (now - lastRun >= limit) {
-      lastRun = now;
-      fn.apply(this, arguments);
-    }
-  };
+    var lastRun = 0;
+    return function () {
+        var now = Date.now();
+        if (now - lastRun >= limit) {
+            lastRun = now;
+            fn.apply(this, arguments);
+        }
+    };
 }
 
 var count = 0;
-var log = throttle(function () { count++; console.log("Throttled call #" + count); }, 50);
-log(); log(); log();
+var log = throttle(function () {
+    count++;
+    console.log("Throttled call #" + count);
+}, 50);
+log();
+log();
+log();
+
 console.log("Immediate count:", count);`,
   },
   {
@@ -1039,22 +1334,24 @@ console.log("Immediate count:", count);`,
 Output: [1, 2, 3, 4, 5, 6]`,
     type: "dual",
     code1: `function flattenArray(arr) {
-  return arr.flat(Infinity);
+    return arr.flat(Infinity);
 }
 
 console.log(JSON.stringify(flattenArray([1, [2, [3, [4, 5]], 6]])));
 console.log(JSON.stringify(flattenArray([1, [2, 3], 4])));`,
     code2: `function flattenArray(arr) {
-  var result = [];
-  for (var i = 0; i < arr.length; i++) {
-    if (Array.isArray(arr[i])) {
-      var nested = flattenArray(arr[i]);
-      for (var j = 0; j < nested.length; j++) result.push(nested[j]);
-    } else {
-      result.push(arr[i]);
+    var result = [];
+    for (var i = 0; i < arr.length; i++) {
+        if (Array.isArray(arr[i])) {
+            var nested = flattenArray(arr[i]);
+            for (var j = 0; j < nested.length; j++) {
+                result.push(nested[j]);
+            }
+        } else {
+            result.push(arr[i]);
+        }
     }
-  }
-  return result;
+    return result;
 }
 
 console.log(JSON.stringify(flattenArray([1, [2, [3, [4, 5]], 6]])));
@@ -1068,28 +1365,30 @@ console.log(JSON.stringify(flattenArray([1, [2, 3], 4])));`,
     example: `[1,2,3].myMap(n => n * 2)  =>  [2, 4, 6]`,
     type: "dual",
     code1: `Array.prototype.myMap = function (callback) {
-  const result = [];
-  for (let i = 0; i < this.length; i++) {
-    result.push(callback(this[i], i, this));
-  }
-  return result;
+    const result = [];
+    for (let i = 0; i < this.length; i++) {
+        result.push(callback(this[i], i, this));
+    }
+    return result;
 };
 
 console.log(JSON.stringify([1, 2, 3].myMap(n => n * 2)));
 console.log(JSON.stringify(["a", "b"].myMap((c, i) => i + ":" + c)));`,
     code2: `Array.prototype.myMap2 = function (callback, thisArg) {
-  var result = [];
-  var i = 0;
-  while (i < this.length) {
-    if (Object.prototype.hasOwnProperty.call(this, i)) {
-      result[i] = callback.call(thisArg, this[i], i, this);
+    var result = [];
+    var i = 0;
+    while (i < this.length) {
+        if (Object.prototype.hasOwnProperty.call(this, i)) {
+            result[i] = callback.call(thisArg, this[i], i, this);
+        }
+        i++;
     }
-    i++;
-  }
-  return result;
+    return result;
 };
 
-console.log(JSON.stringify([1, 2, 3].myMap2(function (n) { return n * 2; })));`,
+console.log(JSON.stringify([1, 2, 3].myMap2(function (n) {
+    return n * 2;
+})));`,
   },
   {
     id: 32,
@@ -1099,29 +1398,47 @@ console.log(JSON.stringify([1, 2, 3].myMap2(function (n) { return n * 2; })));`,
     example: `original.nested.city = "Mumbai"
 clone.nested.city changed to "Delhi" — original stays "Mumbai"`,
     type: "dual",
-    code1: `const original = { name: "Raj", nested: { city: "Mumbai" }, list: [1, 2, 3] };
+    code1: `const original = {
+    name: "Raj",
+    nested: {
+        city: "Mumbai"
+    },
+    list: [1, 2, 3]
+};
 const clone = structuredClone(original);
 clone.nested.city = "Delhi";
 
 console.log("Original:", JSON.stringify(original));
 console.log("Clone:   ", JSON.stringify(clone));`,
     code2: `function deepClone(obj) {
-  if (obj === null || typeof obj !== "object") return obj;
-  if (Array.isArray(obj)) {
-    var arr = [];
-    for (var i = 0; i < obj.length; i++) arr[i] = deepClone(obj[i]);
-    return arr;
-  }
-  var copy = {};
-  for (var key in obj) {
-    if (Object.prototype.hasOwnProperty.call(obj, key)) copy[key] = deepClone(obj[key]);
-  }
-  return copy;
+    if (obj === null || typeof obj !== "object") {
+        return obj;
+    }
+    if (Array.isArray(obj)) {
+        var arr = [];
+        for (var i = 0; i < obj.length; i++) {
+            arr[i] = deepClone(obj[i]);
+        }
+        return arr;
+    }
+    var copy = {};
+    for (var key in obj) {
+        if (Object.prototype.hasOwnProperty.call(obj, key)) {
+            copy[key] = deepClone(obj[key]);
+        }
+    }
+    return copy;
 }
 
-var original = { name: "Raj", nested: { city: "Mumbai" } };
+var original = {
+    name: "Raj",
+    nested: {
+        city: "Mumbai"
+    }
+};
 var clone = deepClone(original);
 clone.nested.city = "Delhi";
+
 console.log("Original:", JSON.stringify(original));
 console.log("Clone:   ", JSON.stringify(clone));`,
   },
@@ -1134,31 +1451,81 @@ console.log("Clone:   ", JSON.stringify(clone));`,
 deepEqual({a:1}, {a:2})  =>  false`,
     type: "dual",
     code1: `function deepEqual(a, b) {
-  if (a === b) return true;
-  if (typeof a !== "object" || typeof b !== "object" || a === null || b === null) return false;
-  const keysA = Object.keys(a), keysB = Object.keys(b);
-  if (keysA.length !== keysB.length) return false;
-  return keysA.every(key => deepEqual(a[key], b[key]));
+    if (a === b) {
+        return true;
+    }
+    if (typeof a !== "object" || typeof b !== "object" || a === null || b === null) {
+        return false;
+    }
+    const keysA = Object.keys(a);
+    const keysB = Object.keys(b);
+    if (keysA.length !== keysB.length) {
+        return false;
+    }
+    return keysA.every(key => deepEqual(a[key], b[key]));
 }
 
-console.log(deepEqual({ a: 1, b: { c: 2 } }, { a: 1, b: { c: 2 } })); // true
-console.log(deepEqual({ a: 1 }, { a: 2 })); // false`,
+console.log(deepEqual({
+    a: 1,
+    b: {
+        c: 2
+    }
+}, {
+    a: 1,
+    b: {
+        c: 2
+    }
+})); // true
+
+console.log(deepEqual({
+    a: 1
+}, {
+    a: 2
+})); // false`,
     code2: `function deepEqual(a, b) {
-  if (a === b) return true;
-  if (typeof a !== "object" || typeof b !== "object" || a === null || b === null) return false;
-  var keysA = [], keysB = [];
-  for (var k1 in a) keysA.push(k1);
-  for (var k2 in b) keysB.push(k2);
-  if (keysA.length !== keysB.length) return false;
-  for (var i = 0; i < keysA.length; i++) {
-    var key = keysA[i];
-    if (!deepEqual(a[key], b[key])) return false;
-  }
-  return true;
+    if (a === b) {
+        return true;
+    }
+    if (typeof a !== "object" || typeof b !== "object" || a === null || b === null) {
+        return false;
+    }
+    var keysA = [];
+    var keysB = [];
+    for (var k1 in a) {
+        keysA.push(k1);
+    }
+    for (var k2 in b) {
+        keysB.push(k2);
+    }
+    if (keysA.length !== keysB.length) {
+        return false;
+    }
+    for (var i = 0; i < keysA.length; i++) {
+        var key = keysA[i];
+        if (!deepEqual(a[key], b[key])) {
+            return false;
+        }
+    }
+    return true;
 }
 
-console.log(deepEqual({ a: 1, b: { c: 2 } }, { a: 1, b: { c: 2 } }));
-console.log(deepEqual({ a: 1 }, { a: 2 }));`,
+console.log(deepEqual({
+    a: 1,
+    b: {
+        c: 2
+    }
+}, {
+    a: 1,
+    b: {
+        c: 2
+    }
+}));
+
+console.log(deepEqual({
+    a: 1
+}, {
+    a: 2
+}));`,
   },
   {
     id: 34,
@@ -1169,23 +1536,34 @@ console.log(deepEqual({ a: 1 }, { a: 2 }));`,
 Output: "w"`,
     type: "dual",
     code1: `function firstNonRepeating(str) {
-  const counts = {};
-  for (const ch of str) counts[ch] = (counts[ch] || 0) + 1;
-  for (const ch of str) if (counts[ch] === 1) return ch;
-  return null;
+    const counts = {};
+    for (const ch of str) {
+        counts[ch] = (counts[ch] || 0) + 1;
+    }
+    for (const ch of str) {
+        if (counts[ch] === 1) {
+            return ch;
+        }
+    }
+    return null;
 }
 
 console.log("swiss  =>", firstNonRepeating("swiss"));
 console.log("aabbcc =>", firstNonRepeating("aabbcc"));`,
     code2: `function firstNonRepeating(str) {
-  for (var i = 0; i < str.length; i++) {
-    var found = false;
-    for (var j = 0; j < str.length; j++) {
-      if (i !== j && str[i] === str[j]) { found = true; break; }
+    for (var i = 0; i < str.length; i++) {
+        var found = false;
+        for (var j = 0; j < str.length; j++) {
+            if (i !== j && str[i] === str[j]) {
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            return str[i];
+        }
     }
-    if (!found) return str[i];
-  }
-  return null;
+    return null;
 }
 
 console.log("swiss  =>", firstNonRepeating("swiss"));
@@ -1200,35 +1578,52 @@ console.log("aabbcc =>", firstNonRepeating("aabbcc"));`,
 fastSquare(5)  // "cache hit" — returned instantly`,
     type: "dual",
     code1: `function memoize(fn) {
-  const cache = new Map();
-  return function (...args) {
-    const key = JSON.stringify(args);
-    if (cache.has(key)) { console.log("cache hit for", key); return cache.get(key); }
-    const result = fn(...args);
-    cache.set(key, result);
-    return result;
-  };
+    const cache = new Map();
+    return function (...args) {
+        const key = JSON.stringify(args);
+        if (cache.has(key)) {
+            console.log("cache hit for", key);
+            return cache.get(key);
+        }
+        const result = fn(...args);
+        cache.set(key, result);
+        return result;
+    };
 }
 
-function slowSquare(n) { for (let i = 0; i < 1e6; i++); return n * n; }
+function slowSquare(n) {
+    for (let i = 0; i < 1e6; i++) {
+        ;
+    }
+    return n * n;
+}
+
 const fastSquare = memoize(slowSquare);
+
 console.log(fastSquare(5));
 console.log(fastSquare(5)); // cache hit`,
     code2: `function memoize(fn) {
-  var cache = {};
-  return function (n) {
-    if (Object.prototype.hasOwnProperty.call(cache, n)) {
-      console.log("cache hit for", n);
-      return cache[n];
-    }
-    var result = fn(n);
-    cache[n] = result;
-    return result;
-  };
+    var cache = {};
+    return function (n) {
+        if (Object.prototype.hasOwnProperty.call(cache, n)) {
+            console.log("cache hit for", n);
+            return cache[n];
+        }
+        var result = fn(n);
+        cache[n] = result;
+        return result;
+    };
 }
 
-function slowSquare(n) { for (var i = 0; i < 1e6; i++); return n * n; }
+function slowSquare(n) {
+    for (var i = 0; i < 1e6; i++) {
+        ;
+    }
+    return n * n;
+}
+
 var fastSquare = memoize(slowSquare);
+
 console.log(fastSquare(5));
 console.log(fastSquare(5));`,
   },
@@ -1241,23 +1636,29 @@ console.log(fastSquare(5));`,
 c(1)(2)(3) === c(1,2)(3) === c(1,2,3) === 6`,
     type: "dual",
     code1: `function curry(fn) {
-  return function curried(...args) {
-    if (args.length >= fn.length) return fn(...args);
-    return (...more) => curried(...args, ...more);
-  };
+    return function curried(...args) {
+        if (args.length >= fn.length) {
+            return fn(...args);
+        }
+        return (...more) => curried(...args, ...more);
+    };
 }
 
-function add3(a, b, c) { return a + b + c; }
+function add3(a, b, c) {
+    return a + b + c;
+}
+
 const curried = curry(add3);
+
 console.log(curried(1)(2)(3));
 console.log(curried(1, 2)(3));
 console.log(curried(1, 2, 3));`,
     code2: `function curryAdd(a) {
-  return function (b) {
-    return function (c) {
-      return a + b + c;
+    return function (b) {
+        return function (c) {
+            return a + b + c;
+        };
     };
-  };
 }
 
 console.log(curryAdd(1)(2)(3));
@@ -1272,26 +1673,32 @@ console.log(curryAdd(10)(20)(30));`,
 sayHi("Raj")  =>  "Hi, Raj!"`,
     type: "dual",
     code1: `Function.prototype.myBind = function (context, ...boundArgs) {
-  const fn = this;
-  return function (...args) {
-    return fn.apply(context, [...boundArgs, ...args]);
-  };
+    const fn = this;
+    return function (...args) {
+        return fn.apply(context, [...boundArgs, ...args]);
+    };
 };
+function greet(greeting, name) {
+    return greeting + ", " + name + "!";
+}
 
-function greet(greeting, name) { return greeting + ", " + name + "!"; }
 const sayHi = greet.myBind(null, "Hi");
+
 console.log(sayHi("Raj"));`,
     code2: `Function.prototype.myBind2 = function (context) {
-  var fn = this;
-  var boundArgs = Array.prototype.slice.call(arguments, 1);
-  return function () {
-    var callArgs = Array.prototype.slice.call(arguments);
-    return fn.apply(context, boundArgs.concat(callArgs));
-  };
+    var fn = this;
+    var boundArgs = Array.prototype.slice.call(arguments, 1);
+    return function () {
+        var callArgs = Array.prototype.slice.call(arguments);
+        return fn.apply(context, boundArgs.concat(callArgs));
+    };
 };
+function greet(greeting, name) {
+    return greeting + ", " + name + "!";
+}
 
-function greet(greeting, name) { return greeting + ", " + name + "!"; }
 var sayHi = greet.myBind2(null, "Hi");
+
 console.log(sayHi("Raj"));`,
   },
   {
@@ -1302,41 +1709,50 @@ console.log(sayHi("Raj"));`,
     example: `myPromiseAll([p1, p2, 3])  =>  resolves with [v1, v2, 3]`,
     type: "dual",
     code1: `function myPromiseAll(promises) {
-  return new Promise((resolve, reject) => {
-    const results = [];
-    let completed = 0;
-    if (promises.length === 0) return resolve([]);
-    promises.forEach((p, i) => {
-      Promise.resolve(p).then(value => {
-        results[i] = value;
-        completed++;
-        if (completed === promises.length) resolve(results);
-      }).catch(reject);
+    return new Promise((resolve, reject) => {
+        const results = [];
+        let completed = 0;
+        if (promises.length === 0) {
+            return resolve([]);
+        }
+        promises.forEach((p, i) => {
+            Promise.resolve(p).then(value => {
+                results[i] = value;
+                completed++;
+                if (completed === promises.length) {
+                    resolve(results);
+                }
+            }).catch(reject);
+        });
     });
-  });
 }
 
-myPromiseAll([Promise.resolve(1), Promise.resolve(2), 3])
-  .then(r => console.log("Resolved:", JSON.stringify(r)));`,
+myPromiseAll([Promise.resolve(1), Promise.resolve(2), 3]).then(r => console.log("Resolved:", JSON.stringify(r)));`,
     code2: `function myPromiseAll(promises) {
-  return new Promise(function (resolve, reject) {
-    var results = [];
-    var completed = 0;
-    if (promises.length === 0) { resolve([]); return; }
-    for (var i = 0; i < promises.length; i++) {
-      (function (index) {
-        Promise.resolve(promises[index]).then(function (value) {
-          results[index] = value;
-          completed++;
-          if (completed === promises.length) resolve(results);
-        }, reject);
-      })(i);
-    }
-  });
+    return new Promise(function (resolve, reject) {
+        var results = [];
+        var completed = 0;
+        if (promises.length === 0) {
+            resolve([]);
+            return;
+        }
+        for (var i = 0; i < promises.length; i++) {
+            (function (index) {
+                Promise.resolve(promises[index]).then(function (value) {
+                    results[index] = value;
+                    completed++;
+                    if (completed === promises.length) {
+                        resolve(results);
+                    }
+                }, reject);
+            })(i);
+        }
+    });
 }
 
-myPromiseAll([Promise.resolve(1), Promise.resolve(2), 3])
-  .then(function (r) { console.log("Resolved:", JSON.stringify(r)); });`,
+myPromiseAll([Promise.resolve(1), Promise.resolve(2), 3]).then(function (r) {
+    console.log("Resolved:", JSON.stringify(r));
+});`,
   },
   {
     id: 39,
@@ -1347,17 +1763,17 @@ myPromiseAll([Promise.resolve(1), Promise.resolve(2), 3])
 emitter.emit("greet", "Raj");  // "Hello, Raj"`,
     type: "dual",
     code1: `class EventEmitter {
-  #events = {};
-  on(event, listener) {
-    (this.#events[event] ||= []).push(listener);
-    return () => this.off(event, listener);
-  }
-  off(event, listener) {
-    this.#events[event] = (this.#events[event] || []).filter(l => l !== listener);
-  }
-  emit(event, ...args) {
-    (this.#events[event] || []).forEach(l => l(...args));
-  }
+    #events = {};
+    on(event, listener) {
+        (this.#events[event] ||= []).push(listener);
+        return () => this.off(event, listener);
+    }
+    off(event, listener) {
+        this.#events[event] = (this.#events[event] || []).filter(l => l !== listener);
+    }
+    emit(event, ...args) {
+        (this.#events[event] || []).forEach(l => l(...args));
+    }
 }
 
 const emitter = new EventEmitter();
@@ -1366,66 +1782,102 @@ emitter.emit("greet", "Raj");
 unsubscribe();
 emitter.emit("greet", "Aman"); // no output — unsubscribed`,
     code2: `function EventEmitter() {
-  this.events = {};
+    this.events = {};
 }
+
 EventEmitter.prototype.on = function (event, listener) {
-  if (!this.events[event]) this.events[event] = [];
-  this.events[event].push(listener);
+    if (!this.events[event]) {
+        this.events[event] = [];
+    }
+    this.events[event].push(listener);
 };
 EventEmitter.prototype.emit = function (event) {
-  var args = Array.prototype.slice.call(arguments, 1);
-  var listeners = this.events[event] || [];
-  for (var i = 0; i < listeners.length; i++) {
-    listeners[i].apply(null, args);
-  }
+    var args = Array.prototype.slice.call(arguments, 1);
+    var listeners = this.events[event] || [];
+    for (var i = 0; i < listeners.length; i++) {
+        listeners[i].apply(null, args);
+    }
 };
-
 var emitter = new EventEmitter();
-emitter.on("greet", function (name) { console.log("Hello, " + name); });
+emitter.on("greet", function (name) {
+    console.log("Hello, " + name);
+});
 emitter.emit("greet", "Raj");`,
   },
   {
     id: 40,
     category: "String",
     title: "Length of the longest substring without repeating characters",
-    description: "Given a string, return the length of its longest contiguous substring where every character is unique.",
+    description: "Given a string, return the length of its longest contiguous substring where every character is unique. Bonus: return the substring itself too.",
     example: `Input:  "abcabcbb"
 Output: 3  ("abc")`,
     type: "dual",
     code1: `function longestUniqueSubstring(str) {
-  let start = 0, maxLen = 0;
-  const seen = new Set();
-  for (let end = 0; end < str.length; end++) {
-    while (seen.has(str[end])) {
-      seen.delete(str[start]);
-      start++;
+    let start = 0;
+    let maxLen = 0;
+    const seen = new Set();
+    for (let end = 0; end < str.length; end++) {
+        while (seen.has(str[end])) {
+            seen.delete(str[start]);
+            start++;
+        }
+        seen.add(str[end]);
+        maxLen = Math.max(maxLen, end - start + 1);
     }
-    seen.add(str[end]);
-    maxLen = Math.max(maxLen, end - start + 1);
-  }
-  return maxLen;
+    return maxLen;
 }
 
 console.log("abcabcbb =>", longestUniqueSubstring("abcabcbb"));
 console.log("bbbbb    =>", longestUniqueSubstring("bbbbb"));
-console.log("pwwkew   =>", longestUniqueSubstring("pwwkew"));`,
-    code2: `function hasUnique(str) {
-  var seen = {};
-  for (var i = 0; i < str.length; i++) {
-    if (seen[str[i]]) return false;
-    seen[str[i]] = true;
-  }
-  return true;
-}
-function longestUniqueSubstring(str) {
-  var maxLen = 0;
-  for (var i = 0; i < str.length; i++) {
-    for (var j = i; j <= str.length; j++) {
-      var sub = str.slice(i, j);
-      if (hasUnique(sub)) maxLen = Math.max(maxLen, sub.length);
+console.log("pwwkew   =>", longestUniqueSubstring("pwwkew"));
+
+// Bonus: return both the substring and its length.
+function longestSubstringWithValue(str) {
+    let set = new Set();
+    let left = 0;
+    let maxLength = 0;
+    let longest = "";
+    for (let right = 0; right < str.length; right++) {
+        while (set.has(str[right])) {
+            set.delete(str[left]);
+            left++;
+        }
+        set.add(str[right]);
+        const currentLength = right - left + 1;
+        if (currentLength > maxLength) {
+            maxLength = currentLength;
+            longest = str.slice(left, right + 1);
+        }
     }
-  }
-  return maxLen;
+    return {
+        substring: longest,
+        length: maxLength
+    };
+}
+
+console.log(longestSubstringWithValue("abcabcbb"));`,
+    code2: `function hasUnique(str) {
+    var seen = {};
+    for (var i = 0; i < str.length; i++) {
+        if (seen[str[i]]) {
+            return false;
+        }
+        seen[str[i]] = true;
+    }
+    return true;
+}
+
+function longestUniqueSubstring(str) {
+    var maxLen = 0;
+    for (var i = 0; i < str.length; i++) {
+        for (var j = i; j <= str.length; j++) {
+            var sub = str.slice(i, j);
+            if (hasUnique(sub)) {
+                maxLen = Math.max(maxLen, sub.length);
+            }
+        }
+    }
+    return maxLen;
 }
 
 console.log("abcabcbb =>", longestUniqueSubstring("abcabcbb"));
@@ -1440,23 +1892,29 @@ console.log("pwwkew   =>", longestUniqueSubstring("pwwkew"));`,
 isAnagram("hello", "world")    =>  false`,
     type: "dual",
     code1: `function isAnagram(a, b) {
-  const normalize = str => str.toLowerCase().replace(/[^a-z0-9]/g, "").split("").sort().join("");
-  return normalize(a) === normalize(b);
+    const normalize = str => str.toLowerCase().replace(/[^a-z0-9]/g, "").split("").sort().join("");
+    return normalize(a) === normalize(b);
 }
 
 console.log("listen/silent =>", isAnagram("listen", "silent"));
 console.log("hello/world   =>", isAnagram("hello", "world"));`,
     code2: `function isAnagram(a, b) {
-  a = a.toLowerCase().replace(/[^a-z0-9]/g, "");
-  b = b.toLowerCase().replace(/[^a-z0-9]/g, "");
-  if (a.length !== b.length) return false;
-  var counts = {};
-  for (var i = 0; i < a.length; i++) counts[a[i]] = (counts[a[i]] || 0) + 1;
-  for (var j = 0; j < b.length; j++) {
-    if (!counts[b[j]]) return false;
-    counts[b[j]]--;
-  }
-  return true;
+    a = a.toLowerCase().replace(/[^a-z0-9]/g, "");
+    b = b.toLowerCase().replace(/[^a-z0-9]/g, "");
+    if (a.length !== b.length) {
+        return false;
+    }
+    var counts = {};
+    for (var i = 0; i < a.length; i++) {
+        counts[a[i]] = (counts[a[i]] || 0) + 1;
+    }
+    for (var j = 0; j < b.length; j++) {
+        if (!counts[b[j]]) {
+            return false;
+        }
+        counts[b[j]]--;
+    }
+    return true;
 }
 
 console.log("listen/silent =>", isAnagram("listen", "silent"));
@@ -1471,20 +1929,20 @@ console.log("hello/world   =>", isAnagram("hello", "world"));`,
 Output: [[[6, 5], 4], [3, 2], 1]`,
     type: "dual",
     code1: `function reverseNested(arr) {
-  return arr.slice().reverse().map(item => Array.isArray(item) ? reverseNested(item) : item);
+    return arr.slice().reverse().map(item => Array.isArray(item) ? reverseNested(item) : item);
 }
 
 console.log(JSON.stringify(reverseNested([1, [2, 3], [4, [5, 6]]])));`,
     code2: `function reverseNested(arr) {
-  var result = [];
-  for (var i = arr.length - 1; i >= 0; i--) {
-    if (Array.isArray(arr[i])) {
-      result.push(reverseNested(arr[i]));
-    } else {
-      result.push(arr[i]);
+    var result = [];
+    for (var i = arr.length - 1; i >= 0; i--) {
+        if (Array.isArray(arr[i])) {
+            result.push(reverseNested(arr[i]));
+        } else {
+            result.push(arr[i]);
+        }
     }
-  }
-  return result;
+    return result;
 }
 
 console.log(JSON.stringify(reverseNested([1, [2, 3], [4, [5, 6]]])));`,
@@ -1503,14 +1961,16 @@ Output: [2, 3, 5, 7, 23, 23]`,
 const flatArray = arr.flat(Infinity);
 
 // Check prime
-const isPrime = (num) => {
-  if (num < 2) return false;
-
-  for (let i = 2; i <= Math.sqrt(num); i++) {
-    if (num % i === 0) return false;
-  }
-
-  return true;
+const isPrime = num => {
+    if (num < 2) {
+        return false;
+    }
+    for (let i = 2; i <= Math.sqrt(num); i++) {
+        if (num % i === 0) {
+            return false;
+        }
+    }
+    return true;
 };
 
 // Find prime numbers
@@ -1518,36 +1978,42 @@ const primes = flatArray.filter(isPrime);
 
 console.log(flatArray);
 console.log(primes);`,
-    code2: `const arr = [1, 2, 3, 4, [5, 6, 7, 8, 9, 23, [34, 35, 64, 23]]];
-
-function flatten(arr) {
-  let result = [];
-
-  for (let item of arr) {
-    if (Array.isArray(item)) {
-      result = result.concat(flatten(item));
-    } else {
-      result.push(item);
+    code2: `const arr = [1, 2, 3, 4, [5, 6, 7, 8, 9, 23, [34, 35, 64]]];
+function flatArray(arr) {
+    let result = []
+    for (let i = 0; i < arr.length; i++) {
+        if (Array.isArray(arr[i])) {
+            result = result.concat(flatArray(arr[i]))
+        } else {
+            result.push(arr[i])
+        }
     }
-  }
-
-  return result;
+    return result
 }
 
-const flatArray = flatten(arr);
+function findPrime(arr) {
+    let result = []
 
-const primes = flatArray.filter((num) => {
-  if (num < 2) return false;
+    for (let num of arr) {
+        if (num < 2) continue
+        let prime = true
+        for (let i = 2; i * i <= num; i++) {
+            if (num % i === 0) {
+                prime = false
+                break
+            }
+        }
+        if (prime) {
+            result.push(num)
+        }
+    }
+    return result
+}
 
-  for (let i = 2; i <= Math.sqrt(num); i++) {
-    if (num % i === 0) return false;
-  }
+let flat = flatArray(arr)
 
-  return true;
-});
-
-console.log(flatArray);
-console.log(primes);`,
+console.log("Flatten array is :", flat)
+console.log("Primes are :", findPrime(flat))`,
   },
 ];
 
@@ -1577,10 +2043,35 @@ function runCode(code) {
   }
 }
 
-function CodePanel({ label, tag, tagStyle, code, onCodeChange }) {
+function CodePanel({ label, tag, tagStyle, code, onCodeChange, tone = "mint" }) {
   const [output, setOutput] = useState(null);
   const [isError, setIsError] = useState(false);
   const [running, setRunning] = useState(false);
+  const editorRef = useRef(null);
+
+  useLayoutEffect(() => {
+    const editor = editorRef.current;
+    const fitCode = () => {
+      editor.style.height = "auto";
+      editor.style.height = `${editor.scrollHeight}px`;
+    };
+
+    fitCode();
+    let width = editor.clientWidth;
+    const observer = new ResizeObserver(() => {
+      if (editor.clientWidth !== width) {
+        width = editor.clientWidth;
+        fitCode();
+      }
+    });
+    observer.observe(editor);
+    document.fonts.addEventListener("loadingdone", fitCode);
+
+    return () => {
+      observer.disconnect();
+      document.fonts.removeEventListener("loadingdone", fitCode);
+    };
+  }, [code]);
 
   const handleRun = () => {
     setRunning(true);
@@ -1593,20 +2084,20 @@ function CodePanel({ label, tag, tagStyle, code, onCodeChange }) {
   };
 
   return (
-    <div style={{
-      background: "#0c0c1a", border: "1px solid #1a1a2e",
-      borderRadius: 12, overflow: "hidden",
+    <div className={`coding-solution coding-solution--${tone}`} style={{
       display: "flex", flexDirection: "column",
     }}>
-      <div style={{
-        padding: "12px 16px", borderBottom: "1px solid #1a1a2e",
+      <div className="coding-solution-heading" style={{
+        padding: "12px 16px",
         display: "flex", justifyContent: "space-between", alignItems: "center",
-        background: "#0e0e1a",
+        gap: 8, flexWrap: "wrap",
       }}>
         <span style={{ fontSize: 14, fontWeight: 600, color: "#d8d4cc" }}>{label}</span>
         <span style={{ fontSize: 12, fontWeight: 500, padding: "3px 8px", borderRadius: 4, ...tagStyle }}>{tag}</span>
       </div>
       <textarea
+        aria-label={tag ? `${label}: ${tag}` : label}
+        ref={editorRef}
         value={code}
         onChange={e => onCodeChange(e.target.value)}
         spellCheck={false}
@@ -1614,11 +2105,13 @@ function CodePanel({ label, tag, tagStyle, code, onCodeChange }) {
           width: "100%", minHeight: 220, border: "none",
           padding: "14px 16px", boxSizing: "border-box",
           fontFamily: "'Manrope', sans-serif",
-          fontSize: 13.5, lineHeight: 1.65, resize: "vertical", textAlign: "left",
-          background: "#0a0a14", color: "#c9d1d9", outline: "none",
+          fontSize: 13.5, lineHeight: 1.65, resize: "none", textAlign: "left",
+          overflow: "hidden", whiteSpace: "pre-wrap", overflowWrap: "anywhere",
+          minWidth: 0, flexShrink: 0,
+          background: "var(--solution-code)", color: "#dce5e1", outline: "none",
         }}
       />
-      <div style={{ padding: "10px 16px", borderTop: "1px solid #1a1a2e", display: "flex", gap: 8, background: "#0c0c1a" }}>
+      <div className="coding-solution-actions" style={{ padding: "10px 16px", display: "flex", gap: 8 }}>
         <button onClick={handleRun} disabled={running} style={{
           background: "#4ade80", color: "#07070f", border: "none",
           padding: "7px 14px", borderRadius: 6, fontSize: 13.5,
@@ -2079,17 +2572,28 @@ const REACT_COMPONENTS = {
 
 // ── Question Card ─────────────────────────────────────────────────
 
-function QuestionHeader({ q, expanded, onToggle }) {
+function QuestionHeader({ q, expanded, onToggle, completed, onToggleCompleted }) {
   const catStyle = CATEGORY_COLORS[q.category] || CATEGORY_COLORS.Logic;
   const isLogic = q.type === "logic";
   const isReact = q.type === "react";
   return (
-    <div
-      onClick={onToggle}
-      style={{ background: "#0c0c1a", border: "1px solid #1a1a2e", borderRadius: 12, padding: "18px 22px", marginBottom: expanded ? 14 : 0, cursor: "pointer" }}
-    >
+    <div className={`coding-question-header${completed ? " is-complete" : ""}`} style={{ marginBottom: expanded ? 14 : 0 }}>
+      <div
+        role="button"
+        tabIndex={0}
+        aria-expanded={expanded}
+        aria-label={`${expanded ? "Hide" : "Show"} solution for question ${q.number}: ${q.title}`}
+        onClick={onToggle}
+        onKeyDown={event => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            onToggle();
+          }
+        }}
+        className="coding-question-disclosure"
+      >
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
-        <span style={{ fontSize: 12, fontWeight: 500, padding: "3px 9px", borderRadius: 5, background: "rgba(196,181,253,0.12)", color: "#c4b5fd" }}>Q{q.id}</span>
+        <span style={{ fontSize: 12, fontWeight: 500, padding: "3px 9px", borderRadius: 5, background: "rgba(196,181,253,0.12)", color: "#c4b5fd" }}>Q{q.number}</span>
         <span style={{ fontSize: 12, fontWeight: 500, padding: "3px 9px", borderRadius: 5, background: catStyle.bg, color: catStyle.color }}>{q.category}</span>
         {isLogic && <span style={{ fontSize: 12, fontWeight: 500, padding: "3px 9px", borderRadius: 5, background: "rgba(249,168,212,0.12)", color: "#f9a8d4" }}>Logic</span>}
         {isReact && <span style={{ fontSize: 12, fontWeight: 500, padding: "3px 9px", borderRadius: 5, background: "rgba(125,211,252,0.12)", color: "#7dd3fc" }}>Live Demo</span>}
@@ -2105,24 +2609,35 @@ function QuestionHeader({ q, expanded, onToggle }) {
         fontFamily: "'Manrope', sans-serif", fontSize: 13.5, color: "#c9d1d9",
         lineHeight: 1.6, whiteSpace: "pre-wrap", wordBreak: "break-word", textAlign: "left",
       }}>{q.example}</pre>
+      </div>
+      <div className="coding-question-completion">
+        <button
+          type="button"
+          className="coding-complete-button"
+          aria-pressed={completed}
+          aria-label={`Mark question ${q.number} ${completed ? "incomplete" : "complete"}`}
+          onClick={onToggleCompleted}
+        >
+          {completed ? "✓ Completed" : "○ Mark complete"}
+        </button>
+      </div>
     </div>
   );
 }
 
-function QuestionCard({ q }) {
+function QuestionCard({ q, completed, onToggleCompleted, expanded, onToggle }) {
   const [codes, setCodes] = useState({ code1: q.code1 || "", code2: q.code2 || "" });
-  const [expanded, setExpanded] = useState(false);
   const isLogic = q.type === "logic";
   const isReact = q.type === "react";
   const isTheory = q.type === "theory";
-  const toggle = () => setExpanded(e => !e);
+  const toggle = onToggle;
 
   if (isTheory) {
     return (
       <div style={{ marginBottom: 28 }}>
-        <QuestionHeader q={q} expanded={expanded} onToggle={toggle} />
-        {expanded && <div style={{ background: "#0c0c1a", border: "1px solid #1a1a2e", borderRadius: 12, overflow: "hidden" }}>
-          <div style={{ padding: "12px 16px", borderBottom: "1px solid #1a1a2e", background: "#0e0e1a", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <QuestionHeader q={q} expanded={expanded} onToggle={toggle} completed={completed} onToggleCompleted={onToggleCompleted} />
+        {expanded && <div className="coding-solution coding-solution--violet">
+          <div className="coding-solution-heading" style={{ padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
             <span style={{ fontSize: 14, fontWeight: 600, color: "#d8d4cc" }}>Theory & Explanation</span>
             <span style={{ fontSize: 12, padding: "3px 8px", borderRadius: 4, background: "rgba(251,146,60,0.12)", color: "#fb923c", fontWeight: 500 }}>Concept</span>
           </div>
@@ -2130,7 +2645,7 @@ function QuestionCard({ q }) {
             margin: 0, padding: "16px", overflowX: "auto",
             fontFamily: "'Manrope', sans-serif",
             fontSize: 13.5, lineHeight: 1.65, color: "#c9d1d9", textAlign: "left",
-            background: "#0a0a14", whiteSpace: "pre-wrap", wordBreak: "break-word",
+            background: "var(--solution-code)", whiteSpace: "pre-wrap", wordBreak: "break-word",
           }}>{q.code1}</pre>
         </div>}
       </div>
@@ -2141,17 +2656,17 @@ function QuestionCard({ q }) {
     const LiveComp = REACT_COMPONENTS[q.component];
     return (
       <div style={{ marginBottom: 28 }}>
-        <QuestionHeader q={q} expanded={expanded} onToggle={toggle} />
-        {expanded && <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 16 }}>
-          <div style={{ background: "#0c0c1a", border: "1px solid #1a1a2e", borderRadius: 12, overflow: "hidden" }}>
-            <div style={{ padding: "12px 16px", borderBottom: "1px solid #1a1a2e", background: "#0e0e1a", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <QuestionHeader q={q} expanded={expanded} onToggle={toggle} completed={completed} onToggleCompleted={onToggleCompleted} />
+        {expanded && <div className="coding-solution-grid">
+          <div className="coding-solution coding-solution--blue">
+            <div className="coding-solution-heading" style={{ padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
               <span style={{ fontSize: 14, fontWeight: 600, color: "#d8d4cc" }}>Live Demo</span>
               <span style={{ fontSize: 12, padding: "3px 8px", borderRadius: 4, background: "rgba(125,211,252,0.12)", color: "#7dd3fc", fontWeight: 500 }}>Interactive</span>
             </div>
             <LiveComp />
           </div>
-          <div style={{ background: "#0c0c1a", border: "1px solid #1a1a2e", borderRadius: 12, overflow: "hidden" }}>
-            <div style={{ padding: "12px 16px", borderBottom: "1px solid #1a1a2e", background: "#0e0e1a", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div className="coding-solution coding-solution--violet">
+            <div className="coding-solution-heading" style={{ padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
               <span style={{ fontSize: 14, fontWeight: 600, color: "#d8d4cc" }}>Solution Code</span>
               <span style={{ fontSize: 12, padding: "3px 8px", borderRadius: 4, background: "rgba(94,234,212,0.12)", color: "#5eead4", fontWeight: 500 }}>React</span>
             </div>
@@ -2159,7 +2674,7 @@ function QuestionCard({ q }) {
               margin: 0, padding: "16px", overflowX: "auto",
               fontFamily: "'Manrope', sans-serif",
               fontSize: 13.5, lineHeight: 1.65, color: "#c9d1d9", textAlign: "left",
-              background: "#0a0a14", whiteSpace: "pre-wrap", wordBreak: "break-word",
+              background: "var(--solution-code)", whiteSpace: "pre-wrap", wordBreak: "break-word",
             }}>{q.code}</pre>
           </div>
         </div>}
@@ -2169,9 +2684,10 @@ function QuestionCard({ q }) {
 
   return (
     <div style={{ marginBottom: 28 }}>
-      <QuestionHeader q={q} expanded={expanded} onToggle={toggle} />
+      <QuestionHeader q={q} expanded={expanded} onToggle={toggle} completed={completed} onToggleCompleted={onToggleCompleted} />
       {expanded && (isLogic ? (
         <CodePanel
+          tone="violet"
           label="Solution"
           tag="Logic"
           tagStyle={{ background: "rgba(249,168,212,0.12)", color: "#f9a8d4" }}
@@ -2179,7 +2695,7 @@ function QuestionCard({ q }) {
           onCodeChange={v => setCodes(p => ({ ...p, code1: v }))}
         />
       ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 16 }}>
+        <div className="coding-solution-grid">
           <CodePanel
             label="Solution 1"
             tag="With predefined functions"
@@ -2189,6 +2705,7 @@ function QuestionCard({ q }) {
           />
           <CodePanel
             label="Solution 2"
+            tone="amber"
             tag="Without predefined functions"
             tagStyle={{ background: "rgba(251,191,36,0.12)", color: "#fbbf24" }}
             code={codes.code2}
@@ -2202,22 +2719,92 @@ function QuestionCard({ q }) {
 
 // ── Coding Section (main export) ──────────────────────────────────
 
-const ALL_CATS = ["All", "String", "Array", "Number", "Type Check", "Logic", "React", "Routing"];
+const CATEGORY_ORDER = ["String", "Array", "Number", "Type Check", "Logic", "React", "Routing"];
+const ALL_CATS = ["All", ...CATEGORY_ORDER];
+const CODING_SECTIONS = ["JavaScript", "React", "Routing"];
+// Keep the original IDs for saved progress; display consecutive numbers in topic order.
+const ORDERED_QUESTIONS = [...QUESTIONS]
+  .sort((a, b) => CATEGORY_ORDER.indexOf(a.category) - CATEGORY_ORDER.indexOf(b.category) || a.id - b.id)
+  .map((question, index) => ({
+    ...question,
+    number: index + 1,
+    section: question.category === "React" ? "React" : question.category === "Routing" ? "Routing" : "JavaScript",
+  }));
+const CODING_PROGRESS_KEY = "codingProgress";
+const MERGED_QUESTION_IDS = { 46: 1, 47: 5, 48: 40 };
+
+function normalizeCodingProgress(completedQuestions) {
+  const validIds = new Set(QUESTIONS.map(question => question.id));
+  return [...new Set(completedQuestions
+    .map(id => MERGED_QUESTION_IDS[id] ?? id)
+    .filter(id => validIds.has(id)))];
+}
+
+function loadCodingProgress() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(CODING_PROGRESS_KEY));
+    if (!Array.isArray(saved?.completedQuestions)) return [];
+    return normalizeCodingProgress(saved.completedQuestions);
+  } catch {
+    return [];
+  }
+}
 
 export default function CodingSection() {
   const [filter, setFilter] = useState("All");
   const [search, setSearch] = useState("");
+  const [openQuestionId, setOpenQuestionId] = useState(null);
+  const [completedQuestions, setCompletedQuestions] = useState(loadCodingProgress);
+  const [status, setStatus] = useState("all");
+  const completedIds = new Set(normalizeCodingProgress(completedQuestions));
+  const completedCount = completedIds.size;
+  const progressPct = Math.round((completedCount / QUESTIONS.length) * 100);
 
-  const filtered = QUESTIONS.filter(q => {
+  useEffect(() => {
+    try {
+      localStorage.setItem(CODING_PROGRESS_KEY, JSON.stringify({ completedQuestions: normalizeCodingProgress(completedQuestions) }));
+    } catch { /* Keep tracking in this session if browser storage is unavailable. */ }
+  }, [completedQuestions]);
+
+  const toggleCompleted = id => {
+    setCompletedQuestions(previous => {
+      const normalized = normalizeCodingProgress(previous);
+      return normalized.includes(id)
+        ? normalized.filter(completedId => completedId !== id)
+        : [...normalized, id];
+    });
+  };
+
+  const filtered = ORDERED_QUESTIONS.filter(q => {
     const matchCat = filter === "All" || q.category === filter;
     const matchSearch = !search.trim() ||
       q.title.toLowerCase().includes(search.toLowerCase()) ||
       q.description.toLowerCase().includes(search.toLowerCase());
-    return matchCat && matchSearch;
+    const matchStatus = status === "all" || (status === "completed" ? completedIds.has(q.id) : !completedIds.has(q.id));
+    return matchCat && matchSearch && matchStatus;
   });
 
   return (
     <div style={{ background: "#07070f", minHeight: "100vh" }}>
+      <section className="coding-progress" aria-labelledby="coding-progress-title">
+        <div className="coding-progress-top">
+          <div>
+            <p className="coding-progress-label">PRACTICE TRACKER</p>
+            <h2 id="coding-progress-title">Coding progress</h2>
+            <p className="coding-progress-description">Mark a question complete after practicing its solution.</p>
+          </div>
+          <div className="coding-progress-count" role="status" aria-live="polite">
+            <strong>{completedCount}</strong><span> / {QUESTIONS.length} completed</span>
+          </div>
+        </div>
+        <div className="coding-progress-summary">
+          <span>{QUESTIONS.length - completedCount} remaining</span>
+          <span>{progressPct}% complete</span>
+        </div>
+        <div className="coding-progress-track" role="progressbar" aria-label="Coding questions completed" aria-valuemin={0} aria-valuemax={QUESTIONS.length} aria-valuenow={completedCount}>
+          <div style={{ width: `${progressPct}%` }} />
+        </div>
+      </section>
       {/* Sticky filter bar */}
       <div style={{ position: "sticky", top: 0, zIndex: 20, background: "#0c0c1e", borderBottom: "1px solid #111120", padding: "12px 24px" }}>
         <div style={{ maxWidth: "min(1400px, 96vw)", margin: "0 auto", display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
@@ -2234,17 +2821,24 @@ export default function CodingSection() {
               }}>
                 {cat}
                 <span style={{ marginLeft: 5, fontSize: 11, opacity: 0.6 }}>
-                  {cat === "All" ? QUESTIONS.length : QUESTIONS.filter(q => q.category === cat).length}
+                  {cat === "All" ? completedCount : QUESTIONS.filter(q => q.category === cat && completedIds.has(q.id)).length}
+                  /{cat === "All" ? QUESTIONS.length : QUESTIONS.filter(q => q.category === cat).length}
                 </span>
               </button>
             );
           })}
+          <select className="coding-status-filter" aria-label="Filter coding progress" value={status} onChange={event => setStatus(event.target.value)}>
+            <option value="all">All questions</option>
+            <option value="remaining">Remaining</option>
+            <option value="completed">Completed</option>
+          </select>
           <div style={{ marginLeft: "auto", position: "relative" }}>
             <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#666", fontSize: 13 }}>🔍</span>
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Search..."
+              aria-label="Search coding questions"
               style={{
                 width: 180, background: "#0c0c1a", border: "1px solid #1a1a2e",
                 borderRadius: 8, padding: "6px 10px 6px 28px",
@@ -2262,7 +2856,28 @@ export default function CodingSection() {
             No questions found
           </div>
         ) : (
-          filtered.map(q => <QuestionCard key={q.id} q={q} />)
+          CODING_SECTIONS.map(section => {
+            const sectionQuestions = filtered.filter(question => question.section === section);
+            if (!sectionQuestions.length) return null;
+            return (
+              <section key={section} className="coding-topic-section" aria-labelledby={`coding-topic-${section}`}>
+                <div className="coding-topic-heading">
+                  <h2 id={`coding-topic-${section}`}>{section}</h2>
+                  <span>{sectionQuestions.length} questions</span>
+                </div>
+                {CATEGORY_ORDER.map(category => {
+                  const categoryQuestions = sectionQuestions.filter(question => question.category === category);
+                  if (!categoryQuestions.length) return null;
+                  return (
+                    <div key={category}>
+                      {section === "JavaScript" && <h3 className="coding-category-heading">{category}</h3>}
+                      {categoryQuestions.map(q => <QuestionCard key={q.id} q={q} completed={completedIds.has(q.id)} onToggleCompleted={() => toggleCompleted(q.id)} expanded={openQuestionId === q.id} onToggle={() => setOpenQuestionId(previous => previous === q.id ? null : q.id)} />)}
+                    </div>
+                  );
+                })}
+              </section>
+            );
+          })
         )}
       </div>
     </div>

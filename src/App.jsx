@@ -6926,13 +6926,13 @@ export default function App() {
                 <span style={{ color: accent, transition: "color 0.3s" }}>EN + Hinglish</span>
               </h1>
               <p style={{ margin: "8px 0 0", color: "#444", fontSize: 13, lineHeight: 1.6 }}>
-                {TOTAL} questions · {CATEGORIES.length} topics · Code examples
+                {mode === "theory" ? `${TOTAL} questions · ${CATEGORIES.length} topics · Code examples` : "Coding practice · Interactive solutions"}
               </p>
             </div>
           </div>
 
           <div style={{ marginTop: 18, display: "flex", gap: 14, alignItems: "flex-start", flexWrap: "wrap" }}>
-            <div style={{
+            {mode === "theory" && <div style={{
               background: "#0c0c1a", border: "1px solid #1a1a2e", borderRadius: 12,
               padding: "12px 16px", textAlign: "center", minWidth: 100,
             }}>
@@ -6947,13 +6947,13 @@ export default function App() {
               <div style={{ marginTop: 6, height: 3, background: "#1a1a30", borderRadius: 99 }}>
                 <div style={{ height: "100%", width: `${progressPct}%`, background: accent, borderRadius: 99, transition: "width 0.4s, background 0.3s" }} />
               </div>
-            </div>
+            </div>}
 
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               <div style={{ display: "flex", gap: 4, background: "#0c0c1a", border: "1px solid #1a1a2e", borderRadius: 8, padding: 3, width: "fit-content" }}>
                 {[
                   { id: "en", label: "🇬🇧 EN" },
-                  { id: "hi", label: "🇮🇳 HI" },
+                  { id: "hi", label: "🇮🇳 Hinglish" },
                   { id: "both", label: "BOTH" },
                 ].map(opt => (
                   <button key={opt.id} onClick={() => setLang(opt.id)} style={{
@@ -6986,7 +6986,7 @@ export default function App() {
               </div>
             </div>
 
-            <div style={{
+            {mode === "theory" && <div style={{
               background: "#0c0c1a", border: "1px solid #1a1a2e", borderRadius: 12,
               padding: "12px 16px", textAlign: "center", minWidth: 100,
             }}>
@@ -7001,7 +7001,7 @@ export default function App() {
               <div style={{ marginTop: 6, height: 3, background: "#1a1a30", borderRadius: 99 }}>
                 <div style={{ height: "100%", width: `${progressPct}%`, background: accent, borderRadius: 99, transition: "width 0.4s, background 0.3s" }} />
               </div>
-            </div>
+            </div>}
           </div>
 
           {mode === "theory" && (
@@ -7359,7 +7359,7 @@ export default function App() {
           <span style={{ fontSize: 18 }}>💡</span>
           <p style={{ margin: 0, color: "#444", fontSize: 13, lineHeight: 1.7 }}>
             <strong style={{ color: "#666" }}>Tip:</strong>{" "}
-            Language toggle top pe — EN, HI, ya BOTH. Code examples browser console mein try karo.
+            Language toggle top pe — EN, Hinglish, ya BOTH. Code examples browser console mein try karo.
             Note: code mein "from" ki jagah "@" use hua hai parser issues avoid karne ke liye.
           </p>
         </div>
