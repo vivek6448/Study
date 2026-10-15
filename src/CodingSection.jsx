@@ -2015,6 +2015,52 @@ let flat = flatArray(arr)
 console.log("Flatten array is :", flat)
 console.log("Primes are :", findPrime(flat))`,
   },
+  {
+    id: 49,
+    category: "Array",
+    title: "Find the minimum and maximum elements from two arrays",
+    description: "Given two arrays of numbers in any order, find the smallest and largest elements across both arrays.",
+    example: `Input: arr1 = [12, 5, 78, 3, 90]
+       arr2 = [45, 2, 100, 8, 23]
+Output: { min: 2, max: 100 }`,
+    type: "dual",
+    code1: `let arr1 = [12, 5, 78, 3, 90];
+let arr2 = [45, 2, 100, 8, 23];
+
+let arr = arr1.concat(arr2);
+
+console.log(Math.min(...arr)); // 2
+console.log(Math.max(...arr)); // 100`,
+    code2: `function findMinMax(arr1, arr2) {
+    let min = Infinity;
+    let max = -Infinity;
+
+    for (let i = 0; i < arr1.length + arr2.length; i++) {
+        let num;
+
+        if (i < arr1.length) {
+            num = arr1[i];
+        } else {
+            num = arr2[i - arr1.length];
+        }
+
+        if (num < min) {
+            min = num;
+        }
+
+        if (num > max) {
+            max = num;
+        }
+    }
+
+    return { min, max };
+}
+
+let arr1 = [12, 5, 78, 3, 90];
+let arr2 = [45, 2, 100, 8, 23];
+
+console.log(findMinMax(arr1, arr2));`,
+  },
 ];
 
 const CATEGORY_COLORS = {
@@ -2750,7 +2796,7 @@ function loadCodingProgress() {
   }
 }
 
-export default function CodingSection() {
+export default function CodingSection({ accent = "#c4b5fd" }) {
   const [filter, setFilter] = useState("All");
   const [search, setSearch] = useState("");
   const [openQuestionId, setOpenQuestionId] = useState(null);
@@ -2786,23 +2832,24 @@ export default function CodingSection() {
 
   return (
     <div style={{ background: "#07070f", minHeight: "100vh" }}>
-      <section className="coding-progress" aria-labelledby="coding-progress-title">
-        <div className="coding-progress-top">
-          <div>
-            <p className="coding-progress-label">PRACTICE TRACKER</p>
-            <h2 id="coding-progress-title">Coding progress</h2>
-            <p className="coding-progress-description">Mark a question complete after practicing its solution.</p>
+      <section className="coding-progress" aria-label="Coding progress" style={{ "--coding-progress-accent": accent }}>
+        <div className="coding-progress-box">
+          <div className="coding-progress-value" role="status" aria-live="polite">
+            <strong>{completedCount}</strong>
+            <span>/{QUESTIONS.length} done</span>
           </div>
-          <div className="coding-progress-count" role="status" aria-live="polite">
-            <strong>{completedCount}</strong><span> / {QUESTIONS.length} completed</span>
+          <div className="coding-progress-track" role="progressbar" aria-label="Coding questions done" aria-valuemin={0} aria-valuemax={QUESTIONS.length} aria-valuenow={completedCount}>
+            <div style={{ width: `${progressPct}%` }} />
           </div>
         </div>
-        <div className="coding-progress-summary">
-          <span>{QUESTIONS.length - completedCount} remaining</span>
-          <span>{progressPct}% complete</span>
-        </div>
-        <div className="coding-progress-track" role="progressbar" aria-label="Coding questions completed" aria-valuemin={0} aria-valuemax={QUESTIONS.length} aria-valuenow={completedCount}>
-          <div style={{ width: `${progressPct}%` }} />
+        <div className="coding-progress-box">
+          <div className="coding-progress-value">
+            <strong>{progressPct}%</strong>
+            <span>complete</span>
+          </div>
+          <div className="coding-progress-track" role="progressbar" aria-label="Coding completion percentage" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progressPct}>
+            <div style={{ width: `${progressPct}%` }} />
+          </div>
         </div>
       </section>
       {/* Sticky filter bar */}

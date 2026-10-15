@@ -7364,7 +7364,7 @@ export default function App() {
           </p>
         </div>
       </div>
-      </> : <CodingSection />}
+      </> : <CodingSection accent={accent} />}
     </div>
   );
 }
